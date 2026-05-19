@@ -2,6 +2,7 @@ package codegen;
 
 import ast.definition.FuncDef;
 import ast.definition.VarDef;
+import ast.statement.For;
 import ast.statement.Statement;
 import ast.type.FuncType;
 import ast.type.RecordField;
@@ -26,9 +27,12 @@ public class OffsetVisitor extends AbstractVisitor<Void, Boolean> {
         fd.getType().accept(this, null);
 
         // Después recorrer el cuerpo como contexto local
+        // Cualquier VarDef que aparezca como Statement dentro del cuerpo recibirá offset local
         for (Statement stmt : fd.getBody())
             stmt.accept(this, true);
 
+        // Guardar cuantos bytes de variables locales necesita la función
+        // Esto se usará luego para la generaión de código en el <enter>
         fd.setBytesLocalSum(bytesLocalSum);
 
         return null;
@@ -48,6 +52,10 @@ public class OffsetVisitor extends AbstractVisitor<Void, Boolean> {
         }
         else {
             // Variable local
+            // Pueden ser:
+            //   - Variable local normal de la función
+            //   - Variable declarada en el init del for
+            //   - Variable declarada dentro del cuerpo del for
             bytesLocalSum += vd.getType().numberOfBytes();
             vd.setOffset(-bytesLocalSum);
         }
@@ -87,6 +95,25 @@ public class OffsetVisitor extends AbstractVisitor<Void, Boolean> {
             // Para soportar records anidados dentro de campos
             rf.getTargetType().accept(this, null);
         }
+
+        return null;
+    }
+
+    @Override
+    public Void visit(For f, Boolean isLocal) {
+        // Las inicializaciones del for pueden ser:
+        // 1. Assignment
+        //    for (i=0; i<5; i=i+1)
+        // 2. VarDef con valor inicial
+        //    for (let i:int = 0; i<5; i=i+1)
+
+        // Si la inicialización es VarDef, hay que asignarle offset local
+        f.getInitialization().accept(this, true);
+
+        // El cuerpo puede tener más VarDef como sentencias
+        // Siguen siendo variables locales de la función, y se visitan con isLocal=true
+        for(Statement stmt : f.getBody())
+            stmt.accept(this, true);
 
         return null;
     }

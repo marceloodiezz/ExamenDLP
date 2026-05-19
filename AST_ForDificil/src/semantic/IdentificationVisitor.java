@@ -40,6 +40,9 @@ public class IdentificationVisitor extends AbstractVisitor<Void, Void> {
     }
 
     public Void visit (VarDef varDef, Void param) {
+        if (varDef.hasInitialValue())
+            varDef.getInitialValue().accept(this, param);
+
         if (!st.insert(varDef))
             new ErrorType("VariableDefinition: La variable '" + varDef.getName() + "' ya ha sido declarada.", varDef);
 
@@ -50,6 +53,15 @@ public class IdentificationVisitor extends AbstractVisitor<Void, Void> {
 
     // ---------------------------------------------------
     // Sentencias
+
+    @Override
+    public Void visit(For forStmt, Void param) {
+        st.set();
+        super.visit(forStmt, param);
+        st.reset();
+
+        return null;
+    }
 
     /*
 

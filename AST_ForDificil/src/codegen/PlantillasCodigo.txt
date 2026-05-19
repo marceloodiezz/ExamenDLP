@@ -54,6 +54,20 @@ execute[[ IfElse: stmt1 -> expr stmt2* stmt3* ]]() =
     stmt3*.forEach(s -> execute[[s]]())
     end <:>
 
+// For
+execute[[ For: stmt1 -> stmt2 expr stmt3 stmt4* ]]() =
+    String condLabel = cg.getLabel()
+    String endLabel = cg.getLabel()
+    execute[[stmt2]]() // Ejecutar inicialización
+    cond <:> // Etiqueta para evaluar condición
+    value[[expr]]() // Evaluar condición
+    cg.convertTo(expr.type, IntType) // Convertir a entero (valor booleano)
+    <jz> end // Saltar al final si la condición es falsa (0)
+    stmt4*.forEach(s -> execute[[s]]()) // Ejecutar cuerpo del for
+    execute[[stmt3]] // Ejecutar incremento
+    <jmp> cond // Volver a evaluar la condición -> Nueva iteración
+    end <:> // Salida del bucle
+
 // FuncCall
 execute[[ FuncCall: stmt -> expr1 expr2* ]]() =
     value[[(Expression) stmt]]()

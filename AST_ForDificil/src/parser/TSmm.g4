@@ -198,6 +198,36 @@ statement returns [List<Statement> ast = new ArrayList<>()] locals [List<Express
              { $ast.add(new Return($e1.ast,
                                    $e1.ast.getLine(),
                                    $e1.ast.getColumn())); }
+         // For
+         | 'for' '(' init=initializationFor ';' cond=expression ';' inc=assignmentFor ')' b1=block
+             { $ast.add(new For($init.ast,
+                                $cond.ast,
+                                $inc.ast,
+                                $b1.ast,
+                                $init.ast.getLine(),
+                                $init.ast.getColumn())); }
+         ;
+
+initializationFor returns [Statement ast] :
+                 a=assignmentFor { $ast = $a.ast; }
+                 | v=varDefFor { $ast = $v.ast; }
+                 ;
+
+assignmentFor returns [Statement ast] :
+             e1=expression '=' e2=expression
+                 { $ast = new Assignment($e1.ast,
+                                         $e2.ast,
+                                         $e1.ast.getLine(),
+                                         $e1.ast.getColumn()); }
+             ;
+
+varDefFor returns [Statement ast] :
+         'let' ID ':' t1=type '=' e1=expression
+             { $ast = new VarDef($ID.getText(),
+                                 $t1.ast,
+                                 $e1.ast,
+                                 $ID.getLine(),
+                                 $ID.getCharPositionInLine()+1); }
          ;
 
 block returns [List<Statement> ast = new ArrayList<>()] :

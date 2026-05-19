@@ -22,6 +22,11 @@ public abstract class AbstractVisitor<RT, PT> implements Visitor<RT, PT> {
     @Override
     public RT visit(VarDef varDef, PT param) {
         varDef.getType().accept(this, param);
+
+        // Si tiene expresión inicial, también hay que visitarla
+        if (varDef.hasInitialValue())
+            varDef.getInitialValue().accept(this, param);
+
         return null;
     }
 
@@ -162,6 +167,16 @@ public abstract class AbstractVisitor<RT, PT> implements Visitor<RT, PT> {
         wh.getCondition().accept(this, param);
         for(Statement stmt : wh.getBody())
             stmt.accept(this, param);
+        return null;
+    }
+
+    @Override
+    public RT visit(For f, PT param) {
+        f.getInitialization().accept(this, param);
+        f.getCondition().accept(this, param);
+        for (Statement stmt : f.getBody())
+            stmt.accept(this, param);
+        f.getIncrement().accept(this, param);
         return null;
     }
 

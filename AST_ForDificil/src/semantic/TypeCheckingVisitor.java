@@ -1,6 +1,7 @@
 package semantic;
 
 import ast.definition.FuncDef;
+import ast.definition.VarDef;
 import ast.expression.*;
 import ast.statement.*;
 import ast.type.*;
@@ -167,6 +168,14 @@ public class TypeCheckingVisitor extends AbstractVisitor<Void, Type> {
         return null;
     }
 
+    @Override
+    public Void visit(For f, Type param) {
+        super.visit(f, param);
+        f.getCondition().getType().mustBeLogical(f);
+
+        return null;
+    }
+
     // ---------------------------------------------------
     // Definiciones
 
@@ -180,6 +189,17 @@ public class TypeCheckingVisitor extends AbstractVisitor<Void, Type> {
             stmt.accept(this, returnType);
 
         return null;
+    }
+
+    // Si las variables tienen inicialización (en caso de que sea del for), hay que comprobarla
+    @Override
+    public Void visit(VarDef vd, Type param) {
+        if(vd.hasInitialValue()) {
+            vd.getInitialValue().accept(this, param);
+            vd.getInitialValue().getType().mustPromotesTo(vd.getType(), vd);
+        }
+
+         return null;
     }
 
 }

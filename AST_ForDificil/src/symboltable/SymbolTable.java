@@ -19,6 +19,8 @@ public class SymbolTable {
 	}
 	
 	public void reset() {
+		if(scope == 0)
+			throw new IllegalStateException("No se puede cerrar el ámbito global.");
 		table.removeLast();
 		scope--;
 	}
@@ -39,6 +41,10 @@ public class SymbolTable {
 				return map.get(id);
 		}
 		return null;
+	}
+
+	public int getScope() {
+		return this.scope;
 	}
 
 	//package-protected for testing pourposes
