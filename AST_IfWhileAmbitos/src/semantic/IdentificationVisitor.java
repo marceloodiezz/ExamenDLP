@@ -48,11 +48,6 @@ public class IdentificationVisitor extends AbstractVisitor<Void, Void> {
         return null;
     }
 
-    // ---------------------------------------------------
-    // Sentencias
-
-    /*
-
     @Override
     public Void visit(While whileStmt, Void param) {
         // 1. La condición se visita en el ámbito actual, porque todavía estamos fuera del cuerpo del while.
@@ -81,22 +76,16 @@ public class IdentificationVisitor extends AbstractVisitor<Void, Void> {
 
         // 2. Abrimos un ámbito solo para el bloque if.
         st.set();
-
         for (Statement stmt : ifElse.getIf_body())
             stmt.accept(this, param);
-
         st.reset();
 
         // 3. Abrimos otro ámbito distinto para el bloque else.
         st.set();
-
         for (Statement stmt : ifElse.getElse_body())
             stmt.accept(this, param);
-
         st.reset();
 
         return null;
     }
-
-     */
 }

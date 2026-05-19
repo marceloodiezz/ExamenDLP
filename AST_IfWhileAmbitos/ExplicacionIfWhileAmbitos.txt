@@ -1,0 +1,476 @@
+Archivos que probablemente hay que tocar:
+
+1. src/symboltable/SymbolTable.java
+   - Solo si el AST base no soporta más de dos ámbitos.
+   - Debe permitir abrir y cerrar ámbitos anidados.
+
+2. src/semantic/IdentificationVisitor.java
+   - Añadir ámbito propio para While.
+   - Añadir ámbito propio para cada rama de IfElse.
+
+Archivos que normalmente NO hace falta tocar:
+
+1. TSmm.g4
+   - La sintaxis no cambia.
+
+2. AST
+   - Los nodos While e IfElse ya existen.
+
+3. LValueVisitor
+   - No cambia.
+
+4. TypeCheckingVisitor
+   - No cambia, salvo que no visite correctamente los cuerpos.
+
+5. OffsetVisitor
+   - Normalmente no cambia.
+   - Solo revisar que siga visitando los cuerpos para asignar offsets a variables internas.
+
+6. ExecuteCGVisitor
+   - No cambia.
+
+7. PlantillasCodigo.txt
+   - No cambia, salvo que quieras documentar que ahora los cuerpos tienen ámbito.
+
+
+------------------------------------------------------------------------------------
+EJEMPLOS VÁLIDOS
+
+- Variable declarada dentro de un if:
+
+    function main(): void {
+        if (1) {
+            let x: int;
+            x = 10;
+            log x;
+        }
+    }
+
+  Es válido porque x se declara y se usa dentro del mismo ámbito del if.
+
+
+- Variable declarada dentro del else:
+
+    function main(): void {
+        if (0) {
+            log 1;
+        } else {
+            let x: int;
+            x = 20;
+            log x;
+        }
+    }
+
+  Es válido porque x se declara y se usa dentro del ámbito del else.
+
+
+- Misma variable declarada en el if y en el else:
+
+    function main(): void {
+        if (1) {
+            let x: int;
+            x = 10;
+            log x;
+        } else {
+            let x: int;
+            x = 20;
+            log x;
+        }
+    }
+
+  Es válido porque el bloque if y el bloque else tienen ámbitos distintos.
+  Por tanto, las dos variables x no entran en conflicto.
+
+
+- Sombreado de una variable local dentro de un if:
+
+    function main(): void {
+        let x: int;
+
+        x = 1;
+
+        if (1) {
+            let x: int;
+            x = 2;
+            log x;
+        }
+
+        log x;
+    }
+
+  Salida esperada:
+      2
+      1
+
+  Es válido porque la x del if pertenece a un ámbito más interno.
+  Al salir del if, vuelve a ser visible la x externa.
+
+
+- Variable declarada dentro de un while:
+
+    function main(): void {
+        let i: int;
+
+        i = 0;
+
+        while (i < 3) {
+            let x: int;
+            x = i + 10;
+            log x;
+
+            i = i + 1;
+        }
+    }
+
+  Salida esperada:
+      10
+      11
+      12
+
+  Es válido porque x se declara y se usa dentro del cuerpo del while.
+  La variable i está declarada fuera, por eso puede usarse tanto en la condición como dentro del cuerpo.
+
+
+- Sombreado de una variable dentro de un while:
+
+    function main(): void {
+        let x: int;
+        let i: int;
+
+        x = 100;
+        i = 0;
+
+        while (i < 2) {
+            let x: int;
+            x = i;
+            log x;
+
+            i = i + 1;
+        }
+
+        log x;
+    }
+
+  Salida esperada:
+      0
+      1
+      100
+
+  Es válido porque la x declarada dentro del while oculta temporalmente a la x externa.
+  Al salir del while, la x externa sigue teniendo su valor original.
+
+
+- If anidado con variables en distintos ámbitos:
+
+    function main(): void {
+        let x: int;
+
+        x = 1;
+
+        if (1) {
+            let y: int;
+            y = 2;
+
+            if (1) {
+                let z: int;
+                z = 3;
+
+                log x;
+                log y;
+                log z;
+            }
+        }
+    }
+
+  Salida esperada:
+      1
+      2
+      3
+
+  Es válido porque los ámbitos internos pueden acceder a las variables de ámbitos externos.
+
+
+- While dentro de if:
+
+    function main(): void {
+        let i: int;
+
+        i = 0;
+
+        if (1) {
+            while (i < 3) {
+                let x: int;
+                x = i;
+                log x;
+
+                i = i + 1;
+            }
+        }
+    }
+
+  Salida esperada:
+      0
+      1
+      2
+
+  Es válido porque el while abre su propio ámbito dentro del ámbito del if.
+
+
+- If dentro de while:
+
+    function main(): void {
+        let i: int;
+
+        i = 0;
+
+        while (i < 3) {
+            if (i == 1) {
+                let x: int;
+                x = 100;
+                log x;
+            } else {
+                let y: int;
+                y = 200;
+                log y;
+            }
+
+            i = i + 1;
+        }
+    }
+
+  Salida esperada:
+      200
+      100
+      200
+
+  Es válido porque cada iteración del while ejecuta bloques con ámbitos propios.
+  Además, el if y el else tienen ámbitos separados.
+
+
+- Reutilizar el mismo nombre en bloques separados:
+
+    function main(): void {
+        if (1) {
+            let x: int;
+            x = 10;
+            log x;
+        }
+
+        if (1) {
+            let x: int;
+            x = 20;
+            log x;
+        }
+    }
+
+  Salida esperada:
+      10
+      20
+
+  Es válido porque cada if abre su propio ámbito.
+  La primera x deja de existir al salir del primer if.
+
+------------------------------------------------------------------------------------
+EJEMPLOS INVÁLIDOS
+
+- Usar fuera del if una variable declarada dentro del if:
+
+    function main(): void {
+        if (1) {
+            let x: int;
+            x = 10;
+        }
+
+        log x; // Error
+    }
+
+  Debe fallar porque x solo existe dentro del ámbito del if.
+
+
+- Usar fuera del else una variable declarada dentro del else:
+
+    function main(): void {
+        if (0) {
+            log 1;
+        } else {
+            let x: int;
+            x = 20;
+        }
+
+        log x; // Error
+    }
+
+  Debe fallar porque x solo existe dentro del ámbito del else.
+
+
+- Usar en el else una variable declarada en el if:
+
+    function main(): void {
+        if (0) {
+            let x: int;
+            x = 10;
+        } else {
+            log x; // Error
+        }
+    }
+
+  Debe fallar porque el if y el else tienen ámbitos distintos.
+  Una variable declarada en el if no existe dentro del else.
+
+
+- Usar después del if una variable declarada solo en una rama:
+
+    function main(): void {
+        if (1) {
+            let x: int;
+            x = 10;
+        } else {
+            let y: int;
+            y = 20;
+        }
+
+        log x; // Error
+        log y; // Error
+    }
+
+  Debe fallar porque x solo existe en la rama if e y solo existe en la rama else.
+
+
+- Usar fuera del while una variable declarada dentro del while:
+
+    function main(): void {
+        let i: int;
+
+        i = 0;
+
+        while (i < 3) {
+            let x: int;
+            x = i;
+            i = i + 1;
+        }
+
+        log x; // Error
+    }
+
+  Debe fallar porque x solo existe dentro del cuerpo del while.
+
+
+- Usar en la condición del while una variable declarada dentro del cuerpo:
+
+    function main(): void {
+        while (x < 3) { // Error
+            let x: int;
+            x = 0;
+        }
+    }
+
+  Debe fallar porque la condición del while se identifica antes de abrir el ámbito del cuerpo.
+  Por tanto, x todavía no existe cuando se analiza la condición.
+
+
+- Usar fuera de un if anidado una variable declarada dentro del if interno:
+
+    function main(): void {
+        if (1) {
+            if (1) {
+                let x: int;
+                x = 10;
+            }
+
+            log x; // Error
+        }
+    }
+
+  Debe fallar porque x solo existe dentro del if interno.
+
+
+- Usar fuera de un while anidado una variable declarada dentro del while interno:
+
+    function main(): void {
+        let i: int;
+        let j: int;
+
+        i = 0;
+
+        while (i < 2) {
+            j = 0;
+
+            while (j < 2) {
+                let x: int;
+                x = j;
+                j = j + 1;
+            }
+
+            log x; // Error
+
+            i = i + 1;
+        }
+    }
+
+  Debe fallar porque x solo existe dentro del while interno.
+
+
+- Redeclarar una variable en el mismo ámbito:
+
+    function main(): void {
+        if (1) {
+            let x: int;
+            let x: int; // Error
+        }
+    }
+
+  Debe fallar porque no se puede declarar dos veces la misma variable en el mismo ámbito.
+
+
+- Usar una variable declarada en el while dentro de la condición de otro while posterior:
+
+    function main(): void {
+        let i: int;
+
+        i = 0;
+
+        while (i < 1) {
+            let x: int;
+            x = 0;
+
+            i = i + 1;
+        }
+
+        while (x < 3) { // Error
+            log x;
+        }
+    }
+
+  Debe fallar porque x dejó de existir al salir del primer while.
+
+
+- Usar en una rama una variable declarada en otra rama anidada:
+
+    function main(): void {
+        if (1) {
+            if (1) {
+                let x: int;
+                x = 10;
+            } else {
+                log x; // Error
+            }
+        }
+    }
+
+  Debe fallar porque la variable x declarada en la rama if interna no existe en la rama else interna.
+
+
+- Usar fuera del bloque una variable que sombrea a otra, sin existir variable externa:
+
+    function main(): void {
+        if (1) {
+            let x: int;
+            x = 5;
+            log x;
+        }
+
+        x = 10; // Error
+    }
+
+  Debe fallar porque no existe ninguna x en el ámbito de la función.
+  La única x estaba declarada dentro del if.

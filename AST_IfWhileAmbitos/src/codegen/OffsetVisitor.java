@@ -2,7 +2,9 @@ package codegen;
 
 import ast.definition.FuncDef;
 import ast.definition.VarDef;
+import ast.statement.IfElse;
 import ast.statement.Statement;
+import ast.statement.While;
 import ast.type.FuncType;
 import ast.type.RecordField;
 import ast.type.RecordType;
@@ -87,6 +89,27 @@ public class OffsetVisitor extends AbstractVisitor<Void, Boolean> {
             // Para soportar records anidados dentro de campos
             rf.getTargetType().accept(this, null);
         }
+
+        return null;
+    }
+
+
+
+    @Override
+    public Void visit(While w, Boolean param) {
+        for (Statement stmt : w.getBody())
+            stmt.accept(this, true);
+
+        return null;
+    }
+
+    @Override
+    public Void visit(IfElse ifElse, Boolean param) {
+        for (Statement stmt : ifElse.getIf_body())
+            stmt.accept(this, true);
+
+        for (Statement stmt : ifElse.getElse_body())
+            stmt.accept(this, true);
 
         return null;
     }
