@@ -1,0 +1,112 @@
+A:
+    { expr.type : Type }
+    Parámetro heredado: { returnType : Type }
+
+G:
+    // Expresiones
+    (01) IntLiteral: expr -> INT_CONST
+    (02) CharLiteral: expr -> CHAR_CONST
+    (03) NumberLiteral: expr -> REAL_CONST
+    (04) Variable: expr -> ID
+    (05) UnaryNot: expr1 -> expr2
+    (06) UnaryMinus: expr1 -> expr2
+    (07) Cast: expr1 -> expr2 type
+    (08) ArrayAccess: expr1 -> expr2 expr3
+    (09) FieldAccess: expr1 -> expr2 ID
+    (10) ArithmeticOp: expr1 -> expr2 ( + | - | * | / | %) expr3
+    (11) LogicOp: expr1 -> expr2 ( && | || ) expr3
+    (12) ComparisonOp: expr1 -> expr2 ( > | >= | < | <= | == | != ) expr3
+    (13) FuncCall: expr1 -> expr2 expr3*
+
+    // Sentencias
+    (14) Return: stmt -> expr
+    (15) Input: stmt -> expr
+    (16) Log: stmt -> expr
+    (17) Assignment: stmt -> expr1 expr2
+    (18) While: stmt1 -> expr stmt2*
+    (19) IfElse: stmt1 -> expr stmt2* stmt3*
+    (20) FuncCall: stmt -> expr1 expr2*
+
+    // Definiciones
+    (21) FuncDef: def -> ID type stmt*
+    (22) VarDef: def -> ID type
+
+    // Tipos
+    (23) IntType: type -> INT
+    (24) CharType: type -> CHAR
+    (25) NumberType: type -> NUMBER
+    (26) VoidType: type -> VOID
+    (27) ArrayType: type -> INT_CONST type
+    (28) FuncType: type -> type def*
+    (29) RecordType:  type -> field*
+    (30) RecordField: field -> ID type
+
+    // Programa
+    (31) Program: program -> def*
+
+R:
+    (01) // IntLiteral
+        expr.type = IntType.getInstance();
+
+    (02) // CharLiteral
+        expr.type = CharType.getInstance();
+
+    (03) // NumberLiteral
+        expr.type = NumberType.getInstance();
+
+    (04) // Variable
+        expr.type = expr.definition.type;
+
+    (05) // UnaryNot
+        expr1.type = expr2.type.logic(expr1);
+
+    (06) // UnaryMinus
+        expr1.type = expr2.type.arithmetic(expr1);
+
+    (07) // Cast
+        expr1.type = expr2.type.canBeCastTo(type, expr1);
+
+    (08) // ArrayAccess
+        expr1.type = expr2.type.squareBrackets(expr3.type, expr1);
+
+    (09) // FieldAccess
+        expr1.type = expr2.type.dot(ID, expr1);
+
+    (10) // ArithmeticOp
+        expr1.type = expr2.type.arithmetic(expr3.type, expr1);
+
+    (11) // LogicOp
+        expr1.type = expr2.type.logic(expr3.type, expr1);
+
+    (12) // ComparisonOp
+        expr1.type = expr2.type.comparison(expr3.type, expr1);
+
+    (13) // FuncCall
+        List<Type> argumentsTypes = new ArrayList<>();
+        for (Expression e : expr3*)
+            argumentsTypes.add(e.type);
+        expr1.type = expr2.type.parenthesis(argumentsTypes, expr1);
+
+    (14) // Return
+        expr.type.mustPromotesTo(returnType, stmt);
+
+    (15) // Input
+        expr.type.mustBeBuiltIn(stmt);
+
+    (16) // Log
+        expr.type.mustBeBuiltIn(stmt);
+
+    (17) // Assignment
+        expr2.type.mustPromotesTo(expr1.type, stmt);
+
+    (18) // While
+        expr.type.mustBeLogical(stmt1);
+
+    (19) // IfElse
+        expr.type.mustBeLogical(stmt1);
+
+    (21) // FuncDef
+        // visit(type);
+        Type returnType = ((FuncType) type).getReturnType();
+        for (Stmt s : stmt*)
+            // visit(s, returnType);
