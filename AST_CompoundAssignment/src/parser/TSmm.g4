@@ -174,6 +174,13 @@ statement returns [List<Statement> ast = new ArrayList<>()] locals [List<Express
                                        $ID.getLine(),
                                        $ID.getCharPositionInLine()+1));
              }
+         // CompoundAssignment
+         | e1=expression OP=('+='|'-=') e2=expression ';'
+             { $ast.add(new CompoundAssignment($e1.ast,
+                                               $OP.getText(),
+                                               $e2.ast,
+                                               $e1.ast.getLine(),
+                                               $e1.ast.getColumn())); }
          // Assignment
          | e1=expression '=' e2=expression ';'
              { $ast.add(new Assignment($e1.ast,

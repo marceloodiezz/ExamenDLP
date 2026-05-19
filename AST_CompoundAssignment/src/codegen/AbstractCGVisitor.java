@@ -100,6 +100,11 @@ public abstract class AbstractCGVisitor<RT, PT> implements Visitor<RT, PT> {
     }
 
     @Override
+    public RT visit(CompoundAssignment assignment, PT param) {
+        throw new IllegalStateException("Generación de código no implementada para el nodo: " + assignment);
+    }
+
+    @Override
     public RT visit(FuncCall funcCall, PT param) {
         throw new IllegalStateException("Generación de código no implementada para el nodo: " + funcCall);
     }

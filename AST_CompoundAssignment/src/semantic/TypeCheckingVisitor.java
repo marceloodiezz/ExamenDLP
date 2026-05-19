@@ -152,6 +152,17 @@ public class TypeCheckingVisitor extends AbstractVisitor<Void, Type> {
     }
 
     @Override
+    public Void visit(CompoundAssignment ca, Type param) {
+        super.visit(ca, param);
+
+        Type operationType = ca.getLeft().getType().arithmetic(ca.getRight().getType(), ca);
+
+        operationType.mustPromotesTo(ca.getLeft().getType(), ca);
+
+        return null;
+    }
+
+    @Override
     public Void visit(While w, Type param) {
         super.visit(w, param);
         w.getCondition().getType().mustBeLogical(w);

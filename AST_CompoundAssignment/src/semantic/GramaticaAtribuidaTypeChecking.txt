@@ -23,6 +23,7 @@ G:
     (15) Input: stmt -> expr
     (16) Log: stmt -> expr
     (17) Assignment: stmt -> expr1 expr2
+    (32) CompoundAssignment: stmt -> expr1 ( += | -= ) expr2
     (18) While: stmt1 -> expr stmt2*
     (19) IfElse: stmt1 -> expr stmt2* stmt3*
     (20) FuncCall: stmt -> expr1 expr2*
@@ -98,6 +99,10 @@ R:
 
     (17) // Assignment
         expr2.type.mustPromotesTo(expr1.type, stmt);
+
+    (32) // CompoundAssignment
+        Type operationType = expr1.type.arithmetic(expr2.type, stmt);
+        operationType.mustPromotesTo(expr1.type, stmt);
 
     (18) // While
         expr.type.mustBeLogical(stmt1);

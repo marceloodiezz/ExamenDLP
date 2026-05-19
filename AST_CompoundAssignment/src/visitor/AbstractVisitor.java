@@ -122,6 +122,13 @@ public abstract class AbstractVisitor<RT, PT> implements Visitor<RT, PT> {
     }
 
     @Override
+    public RT visit(CompoundAssignment ca, PT param) {
+        ca.getLeft().accept(this, param);
+        ca.getRight().accept(this, param);
+        return null;
+    }
+
+    @Override
     public RT visit(FuncCall funcCall, PT param) {
         funcCall.getVariable().accept(this, param);
         for(Expression arg : funcCall.getArgs())

@@ -22,6 +22,7 @@ G:
     (15) Input: stmt -> expr
     (16) Log: stmt -> expr
     (17) Assignment: stmt -> expr1 expr2
+    (32) CompoundAssignment: stmt -> expr1 ( += | -= ) expr2
     (18) While: stmt1 -> expr stmt2*
     (19) IfElse: stmt1 -> expr stmt2* stmt3*
     (20) FuncCall: stmt -> expr1 expr2*
@@ -88,5 +89,9 @@ R:
             error("La expresión debe ser lvalue");
 
     (17) // Assignment
+        if (!expr1.lvalue)
+            error("El lado izq de la asignación debe ser lvalue");
+
+    (32) // CompoundAssignment
         if (!expr1.lvalue)
             error("El lado izq de la asignación debe ser lvalue");

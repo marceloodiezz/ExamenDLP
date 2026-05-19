@@ -29,6 +29,19 @@ execute[[ Assignment: stmt -> expr1 expr2 ]]() =
     cg.convertTo(expr2.type, expr1.type)
     <store> expr1.type.suffix()
 
+// CompoundAssignment
+execute[[ CompoundAssignment: stmt -> expr1 OP expr2 ]]() =
+    Type operatingType = expr1.type.arithmetic(expr2.type, stmt)
+    address[[expr1]]()
+    address[[expr1]]()
+    <load> expr1.type
+    cg.convertTo(expr1.type, operationType)
+    value[[expr2]]()
+    cg.convertTo(expr2.type, operationType)
+    cg.compoundAssignment(OP, operationType)
+    cg.convertTo(operationType, expr1.type)
+    <store> expr1.type
+
 // While
 execute[[ While: stmt1 -> expr stmt2* ]]() =
     String cond = cg.getLabel()

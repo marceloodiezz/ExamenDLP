@@ -93,6 +93,48 @@ public class ExecuteCGVisitor extends AbstractCGVisitor<Void, FuncDef> {
     }
 
     /**
+     * execute[[ CompoundAssignment: stmt -> expr1 OP expr2 ]]() =
+     *     Type operatingType = expr1.type.arithmetic(expr2.type, stmt)
+     *     address[[expr1]]()
+     *     address[[expr1]]()
+     *     <load> expr1.type
+     *     cg.convertTo(expr1.type, operationType)
+     *     value[[expr2]]()
+     *     cg.convertTo(expr2.type, operationType)
+     *     cg.compoundAssignment(OP, operationType)
+     *     cg.convertTo(operationType, expr1.type)
+     *     <store> expr1.type
+     */
+    @Override
+    public Void visit(CompoundAssignment ca, FuncDef param) {
+        Type operationType = ca.getLeft().getType().arithmetic(ca.getRight().getType(), ca);
+
+        getCodeGenerator().commentLine(ca.getLine());
+        getCodeGenerator().comment("Compound Assignment " + ca.getOperator());
+
+        // Dirección donde se almacenará el resultado final
+        ca.getLeft().accept(addressCGVisitor, null);
+
+        // Valor actual del lado izquierdo
+        ca.getLeft().accept(addressCGVisitor, null);
+        getCodeGenerator().load(ca.getLeft().getType());
+        getCodeGenerator().convertTo(ca.getLeft().getType(), operationType);
+
+        // Valor del lado derecho
+        ca.getRight().accept(valueCGVisitor, null);
+        getCodeGenerator().convertTo(ca.getRight().getType(), operationType);
+
+        // Operación
+        getCodeGenerator().compoundAssignment(ca.getOperator(), operationType);
+
+        // Guardar el resultado en el lado izquierdo
+        getCodeGenerator().convertTo(operationType, ca.getLeft().getType());
+        getCodeGenerator().store(ca.getLeft().getType());
+
+        return null;
+    }
+
+    /**
      * execute[[ While: stmt1 -> expr stmt2* ]]() =
      *     String cond = cg.getLabel()
      *     String end = cg.getLabel()

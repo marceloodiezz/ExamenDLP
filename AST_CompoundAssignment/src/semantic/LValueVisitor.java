@@ -2,6 +2,7 @@ package semantic;
 
 import ast.expression.*;
 import ast.statement.Assignment;
+import ast.statement.CompoundAssignment;
 import ast.statement.FuncCall;
 import ast.statement.Input;
 import ast.type.ErrorType;
@@ -133,6 +134,15 @@ public class LValueVisitor extends AbstractVisitor<Void, Void> {
         super.visit(assignment, param);
         if (!assignment.getLeft().getLValue())
             new ErrorType("Assignment: El lado izquierdo debe ser direccionable (lValue)" , assignment.getLeft());
+
+        return null;
+    }
+
+    @Override
+    public Void visit(CompoundAssignment assignment, Void param) {
+        super.visit(assignment, param);
+        if (!assignment.getLeft().getLValue())
+            new ErrorType("CompoundAssignment: El lado izquierdo debe ser direccionable (lValue)" , assignment.getLeft());
 
         return null;
     }

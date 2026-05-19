@@ -31,6 +31,7 @@ public interface Visitor<RT, PT> {
 
     // Sentencias
     RT visit(Assignment assignment, PT param);
+    RT visit (CompoundAssignment ca, PT param);
     RT visit(FuncCall funcCall, PT param);
     RT visit(IfElse ifElse, PT param);
     RT visit(Input input, PT param);
