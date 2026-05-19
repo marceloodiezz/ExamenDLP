@@ -1,0 +1,65 @@
+A:
+    { expr.definition : Definition }
+
+G:
+    // Expresiones
+    (01) IntLiteral: expr -> INT_CONST
+    (02) CharLiteral: expr -> CHAR_CONST
+    (03) NumberLiteral: expr -> REAL_CONST
+    (04) Variable: expr -> ID
+    (05) UnaryNot: expr1 -> expr2
+    (06) UnaryMinus: expr1 -> expr2
+    (07) Cast: expr1 -> expr2 type
+    (08) ArrayAccess: expr1 -> expr2 expr3
+    (09) FieldAccess: expr1 -> expr2 ID
+    (10) ArithmeticOp: expr1 -> expr2 ( + | - | * | / | %) expr3
+    (11) LogicOp: expr1 -> expr2 ( && | || ) expr3
+    (12) ComparisonOp: expr1 -> expr2 ( > | >= | < | <= | == | != ) expr3
+    (13) FuncCall: expr1 -> expr2 expr3*
+
+    // Sentencias
+    (14) Return: stmt -> expr
+    (15) Input: stmt -> expr
+    (16) Log: stmt -> expr
+    (17) Assignment: stmt -> expr1 expr2
+    (18) While: stmt1 -> expr stmt2*
+    (19) IfElse: stmt1 -> expr stmt2* stmt3*
+    (20) FuncCall: stmt -> expr1 expr2*
+
+    // Definiciones
+    (21) FuncDef: def -> ID type stmt*
+    (22) VarDef: def -> ID type
+
+    // Tipos
+    (23) IntType: type -> INT
+    (24) CharType: type -> CHAR
+    (25) NumberType: type -> NUMBER
+    (26) VoidType: type -> VOID
+    (27) ArrayType: type -> INT_CONST type
+    (28) FuncType: type -> type def*
+    (29) RecordType:  type -> field*
+    (30) RecordField: field -> ID type
+
+    // Programa
+    (31) Program: program -> def*
+
+R:
+    (04) // Variable
+        Definition def = st.find(ID);
+        if (def != null)
+            expr.definition = def;
+        else {
+            error("La variable 'ID' no ha sido declarada");
+            expr.definition = new VarDef("", ErrorType, 0, 0);
+        }
+
+    (21) // FuncDef
+        if (!st.insert(def))
+            error("La función 'ID' ya ha sido declarada");
+        st.set();
+        for (Stmt s : stmt*)
+        st.reset();
+
+    (22) // VarDef
+        if (!st.insert(def))
+            error("La variable 'ID' ya ha sido declarada");
