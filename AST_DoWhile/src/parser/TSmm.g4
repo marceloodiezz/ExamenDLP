@@ -193,6 +193,12 @@ statement returns [List<Statement> ast = new ArrayList<>()] locals [List<Express
                                   $b1.ast,
                                   $e1.ast.getLine(),
                                   $e1.ast.getColumn())); }
+         // DoWhile
+         | 'do' b1=block 'while' '(' e1=expression ')' ';'
+             { $ast.add(new DoWhile($e1.ast,
+                                    $b1.ast,
+                                    $e1.ast.getLine(),
+                                    $e1.ast.getColumn())); }
          // Return
          | 'return' e1=expression ';'
              { $ast.add(new Return($e1.ast,

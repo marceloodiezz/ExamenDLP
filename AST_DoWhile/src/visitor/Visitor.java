@@ -37,6 +37,7 @@ public interface Visitor<RT, PT> {
     RT visit(Log log, PT param);
     RT visit(Return ret, PT param);
     RT visit(While wh, PT param);
+    RT visit(DoWhile dw, PT param);
 
     // Tipos
     RT visit(ArrayType arrayType, PT param);

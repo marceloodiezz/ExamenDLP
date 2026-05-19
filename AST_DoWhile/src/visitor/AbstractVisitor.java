@@ -165,6 +165,14 @@ public abstract class AbstractVisitor<RT, PT> implements Visitor<RT, PT> {
         return null;
     }
 
+    @Override
+    public RT visit(DoWhile dw, PT param) {
+        dw.getCondition().accept(this, param);
+        for (Statement stmt : dw.getBody())
+            stmt.accept(this, param);
+        return null;
+    }
+
     // ---------------------------------------------------
     // Tipos
 

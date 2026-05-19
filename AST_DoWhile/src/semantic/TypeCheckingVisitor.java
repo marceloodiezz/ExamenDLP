@@ -160,6 +160,14 @@ public class TypeCheckingVisitor extends AbstractVisitor<Void, Type> {
     }
 
     @Override
+    public Void visit(DoWhile dw, Type param) {
+        super.visit(dw, param);
+        dw.getCondition().getType().mustBeLogical(dw);
+
+        return null;
+    }
+
+    @Override
     public Void visit(IfElse i, Type param) {
         super.visit(i, param);
         i.getCondition().getType().mustBeLogical(i);
