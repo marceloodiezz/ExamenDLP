@@ -198,7 +198,25 @@ statement returns [List<Statement> ast = new ArrayList<>()] locals [List<Express
              { $ast.add(new Return($e1.ast,
                                    $e1.ast.getLine(),
                                    $e1.ast.getColumn())); }
+         // For
+         | 'for' '(' init=assignmentFor ';' cond=expression ';' incr=assignmentFor ')' b1=block
+             { $ast.add(new For($init.ast,
+                                $cond.ast,
+                                $incr.ast,
+                                $b1.ast,
+                                $cond.ast.getLine(),
+                                $cond.ast.getColumn())); }
          ;
+
+// Asignación sin ';'
+// Necesario para la incialización (i=0) y el incremento (i=i+1)
+assignmentFor returns [Statement ast] :
+             e1=expression '=' e2=expression
+                 { $ast = new Assignment($e1.ast,
+                                           $e2.ast,
+                                           $e1.ast.getLine(),
+                                           $e1.ast.getColumn()); }
+             ;
 
 block returns [List<Statement> ast = new ArrayList<>()] :
      s1=statement { $ast.addAll($s1.ast); }

@@ -159,6 +159,57 @@ public class ExecuteCGVisitor extends AbstractCGVisitor<Void, FuncDef> {
     }
 
     /**
+     * execute[[ For: stmt1 -> stmt2 expr stmt3 stmt4* ]]() =
+     *     String condLabel = cg.getLabel()
+     *     String endLabel = cg.getLabel()
+     *     execute[[stmt2]]()
+     *     cond <:>
+     *     value[[expr]]()
+     *     cg.convertTo(expr.type, IntType)
+     *     <jz> end
+     *     stmt4*.forEach(s -> execute[[s]]())
+     *     execute[[stmt3]]
+     *     <jmp> cond
+     *     end <:>
+     */
+    @Override
+    public Void visit(For f, FuncDef param) {
+        String condLabel = getCodeGenerator().getLabel();
+        String endLabel = getCodeGenerator().getLabel();
+
+        getCodeGenerator().commentLine(f.getLine());
+        getCodeGenerator().comment("For");
+
+        // Ejecutar inicialización
+        f.getInitialization().accept(this, param);
+
+        // Etiqueta para evaluar la condición
+        getCodeGenerator().label(condLabel);
+
+        // Evaluar condición
+        f.getCondition().accept(valueCGVisitor, null);
+        getCodeGenerator().convertTo(f.getCondition().getType(), IntType.getInstance());
+
+        // Saltar al final si la condición es falsa (0)
+        getCodeGenerator().jz(endLabel);
+
+        // Ejecutar cuerpo del bucle for
+        for (Statement st : f.getBody())
+            st.accept(this, param);
+
+        // Ejecutar incremento
+        f.getIncrement().accept(this, param);
+
+        // Volver a evaluar la condición -> Nueva iteración
+        getCodeGenerator().jmp(condLabel);
+
+        // Salida del bucle
+        getCodeGenerator().label(endLabel);
+
+        return null;
+    }
+
+    /**
      * execute[[ FuncCall: stmt -> expr1 expr2* ]]() =
      *     value[[(Expression) stmt]]()
      *     if (expr1.type.returnType != VoidType)
