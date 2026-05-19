@@ -1,0 +1,30 @@
+Paso a paso Operador Ternario:
+
+1. Añadir clase al AST
+  - Crear clase
+  - Guardar condición, rama true y rama False
+  - Recordar modificar accept
+
+2. Añadir visit al Visitor, AbstractVisitor y AbstractCGVisitor
+
+3. Añadir regla para ANTL en TSmm.g4
+  - Asociativo de derechas!!
+  - Acordarse de generar recognizer
+
+4. Fase LValue
+  - Operador Ternario NO es LValue
+
+5. Fase Identification -> Nada
+
+6. Fase TypeChecking
+  - La condición debe ser lógica
+  - Las ramas deben tener tipos compatibles
+    -> Añadir método ternary en Type y AbstractType
+    -> Implementarlo en IntType, CharType, NumberType y ErrorType
+
+7. Fase Offset -> Nada
+
+8. Añadir plantillas de código
+  - Solo en Value por ser una expresión y no lvalue
+
+9. Añadir a valueCGVisitor
