@@ -159,6 +159,72 @@ public class ExecuteCGVisitor extends AbstractCGVisitor<Void, FuncDef> {
     }
 
     /**
+     * execute[[ ForEach: stmt1 -> expr1 expr2 stmt2* ]]() =
+     *     ArrayType arrayType = (ArrayType) expr2.type
+     *     Type elementType = expr2.type.foreach(stmt1)
+     *     for(i=0; i<expr2.type.size; i++) {
+     *         address[[expr1]]()
+     *         address[[expr2]]()
+     *         <pushi> i
+     *         <pushi> elementType.numberOfBytes()
+     *         <muli>
+     *         <addi>
+     *         <load> elementType.suffix()
+     *         cg.convertTo(elementType, expr1.type)
+     *         <store> expr1.type.suffix()
+     *         stmt2*.forEach(s -> execute[[s]]())
+     *     }
+     */
+    @Override
+    public Void visit(ForEach fe, FuncDef param) {
+        ArrayType arrayType = (ArrayType) fe.getCollection().getType();
+        Type elementType = fe.getCollection().getType().foreach(fe);
+
+        getCodeGenerator().commentLine(fe.getLine());
+        getCodeGenerator().comment("ForEach");
+
+        // Recorrer todas las posiciones del array
+        for (int i=0; i<arrayType.getSize(); i++) {
+            getCodeGenerator().comment("ForEach iteration " + i);
+
+            // Dirección de la variable iteradora
+            // Es donde se almacenará el elemento actual del array
+            fe.getVariable().accept(addressCGVisitor, null);
+
+            // Dirección base de la colección del array
+            fe.getCollection().accept(addressCGVisitor, null);
+
+            // Apilar el indice actual
+            getCodeGenerator().pushi(i);
+
+            // Apilar el tamaño en bytes de cada elemento del array
+            getCodeGenerator().pushi(elementType.numberOfBytes());
+
+            // Calcular i * tamañoElemento
+            getCodeGenerator().mul(IntType.getInstance());
+
+            // Calcular direcciónBaseArray + desplazamiento
+            // Ahora queda en la pila la dirección de array[i]
+            getCodeGenerator().add(IntType.getInstance());
+
+            // Cargar el valor de array[i]
+            getCodeGenerator().load(elementType);
+
+            // Convertir el valor del elemento al tipo de la variable iteradora
+            getCodeGenerator().convertTo(elementType, fe.getVariable().getType());
+
+            // Guardar el valor actual del array en la variable iteradora
+            getCodeGenerator().store(fe.getVariable().getType());
+
+            // Ejecutar el cuerpo del foreach
+            for (Statement s : fe.getBody())
+                s.accept(this, param);
+        }
+
+        return null;
+    }
+
+    /**
      * execute[[ FuncCall: stmt -> expr1 expr2* ]]() =
      *     value[[(Expression) stmt]]()
      *     if (expr1.type.returnType != VoidType)

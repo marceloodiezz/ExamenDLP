@@ -1,0 +1,124 @@
+Paso a paso del Foreach de arrays sin ámbitos
+
+1. Añadir clase ForEach al AST
+  - Hay que guardar: Variable iteradora, Colección recorrida y Cuerpo del bucle
+  - Recordar modificar el método accept
+
+2. Añadir visit al Visitor, AbstractVistitor y AbstractCGVisitor
+
+3. Añadir regla ANTLR en TSmm.g4
+  - Acordarse de generar el recognizer
+
+4. Fase LValue
+  - La variable iteradora del ForEach debe ser lvalue
+
+5. Fase Identification -> Nada
+
+6. Fase TypeChecking
+  - Nuevo método auxiliar 'foreach' en Type, AbstractType, ArrayType y ErrorType
+    -> Sirve para preguntar por el tipo de la colección
+  - Método visit para comprobar que el elemento del array puede almacenarse en la variable iteradora
+
+7. Fase Offset -> Nada
+
+8. Plantilla de código explicada
+  - Solo execute
+
+9. ExecuteCGVisitor
+
+
+------------------------------------------------------------------------------------
+EJEMPLOS VÁLIDOS
+
+- Foreach básico sobre array de enteros:
+    let nums: [3]int;
+
+    function main(): void {
+        let x: int;
+
+        nums[0] = 10;
+        nums[1] = 20;
+        nums[2] = 30;
+
+        foreach (x in nums) {
+            log x;
+        }
+    }
+
+- Foreach con promoción de char a int:
+    let letters: [3]char;
+
+    function main(): void {
+        let x: int;
+
+        letters[0] = 'a';
+        letters[1] = 'b';
+        letters[2] = 'c';
+
+        foreach (x in letters) {
+            log x;
+        }
+    }
+
+- Foreach usando una variable global como colección:
+    let nums: [3]int;
+
+    function main(): void {
+        let x: int;
+
+        foreach (x in nums) {
+            log x;
+        }
+    }
+
+- Foreach usando variable iteradora global:
+    let nums: [3]int;
+    let x: int;
+
+    function main(): void {
+        foreach (x in nums) {
+            log x;
+        }
+    }
+
+------------------------------------------------------------------------------------
+EJEMPLOS INVÁLIDOS
+
+- Variable iteradora no declarada:
+    let nums: [3]int;
+
+    function main(): void {
+        foreach (x in nums) {
+            log x;
+        }
+    }
+
+  Error:
+    x no ha sido declarada
+
+- Colección no array:
+    function main(): void {
+        let x: int;
+        let n: int;
+
+        foreach (x in n) {
+            log x;
+        }
+    }
+
+  Error:
+    La expresión recorrida debe ser de tipo array
+
+- Tipo incompatible entre elemento e iterador:
+    let nums: [3]int;
+
+    function main(): void {
+        let c: char;
+
+        foreach (c in nums) {
+            log c;
+        }
+    }
+
+  Error:
+    int no promociona a char

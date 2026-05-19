@@ -198,6 +198,18 @@ statement returns [List<Statement> ast = new ArrayList<>()] locals [List<Express
              { $ast.add(new Return($e1.ast,
                                    $e1.ast.getLine(),
                                    $e1.ast.getColumn())); }
+         // ForEach
+         | 'foreach' '(' ID 'in' e1=expression ')' b1=block
+             {
+                 Variable iterator = new Variable($ID.getText(),
+                                                  $ID.getLine(),
+                                                  $ID.getCharPositionInLine()+1);
+                 $ast.add(new ForEach(iterator,
+                                      $e1.ast,
+                                      $b1.ast,
+                                      iterator.getLine(),
+                                      iterator.getColumn()));
+             }
          ;
 
 block returns [List<Statement> ast = new ArrayList<>()] :

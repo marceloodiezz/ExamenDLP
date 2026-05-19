@@ -1,28 +1,15 @@
-let c: char;
-let i: int;
-let r: number;
+let nums: [3]int;
 
-function main(): void{
-	let a, i:int;
-	
-	c = 'a';
-	log c,'\n';
+function main(): void {
 
-	a = (1.5 as int);
-	i = '0' * 3;
-	log a, ' ', i, '\n';
-		
-	input r;
-	log 2 * r, '\n';
-	
-	log 3 - 4.5, ' ', 
-            '0' / 48.0, ' ',
-            '0' % '1', ' ',
-            0 + '1', '\n';
-	log 1 < 2, ' ',
-	      4 >= 3, ' ',
-	      5 == 5, ' ',
-	      1 && 2, ' ',
-	      0 || 3, ' ',
-	      !0, '\n';
+    let x: int;
+
+    nums[0] = 10;
+    nums[1] = 20;
+    nums[2] = 30;
+
+    foreach (x in nums) {
+        log x;
+    }
+
 }

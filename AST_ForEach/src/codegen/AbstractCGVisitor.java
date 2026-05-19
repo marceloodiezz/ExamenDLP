@@ -130,6 +130,11 @@ public abstract class AbstractCGVisitor<RT, PT> implements Visitor<RT, PT> {
     }
 
     @Override
+    public RT visit(ForEach fe, PT param) {
+        throw new IllegalStateException("Generación de código no implementada para el nodo: " + fe);
+    }
+
+    @Override
     public RT visit(ArrayType arrayType, PT param) {
         throw new IllegalStateException("Generación de código no implementada para el nodo: " + arrayType);
     }

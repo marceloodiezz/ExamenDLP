@@ -2,6 +2,7 @@ package semantic;
 
 import ast.expression.*;
 import ast.statement.Assignment;
+import ast.statement.ForEach;
 import ast.statement.FuncCall;
 import ast.statement.Input;
 import ast.type.ErrorType;
@@ -133,6 +134,19 @@ public class LValueVisitor extends AbstractVisitor<Void, Void> {
         super.visit(assignment, param);
         if (!assignment.getLeft().getLValue())
             new ErrorType("Assignment: El lado izquierdo debe ser direccionable (lValue)" , assignment.getLeft());
+
+        return null;
+    }
+
+    /**
+     * Hay que comprobar que la variable iteradora del foreach es direccionable,
+     * ya que internamente se hará 'x=array[i]'
+     */
+    @Override
+    public Void visit(ForEach fe, Void param) {
+        super.visit(fe, param);
+        if (!fe.getVariable().getLValue())
+            new ErrorType("ForEach: La variable iteradora debe ser direccionable (lValue)", fe.getVariable());
 
         return null;
     }

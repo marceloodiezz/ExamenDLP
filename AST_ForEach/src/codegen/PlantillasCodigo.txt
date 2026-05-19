@@ -91,6 +91,23 @@ execute[[ Program: program -> def* ]]() =
         if (d instanceof FuncDef)
             execute[[d]]()
 
+// ForEach
+execute[[ ForEach: stmt1 -> expr1 expr2 stmt2* ]]() =
+    ArrayType arrayType = (ArrayType) expr2.type // Obtener el tipo de la colección recorrida
+    Type elementType = expr2.type.foreach(expr2) // Obtener el tipo de cada elemento del array
+    for(i=0; i<expr2.type.size; i++) { // Repetir el cuerpo del foreach para cada posición del array
+        address[[expr1]]() // Dejar en la pila la dirección de la variable iteradora
+        address[[expr2]]() // Dejar en la pila la dirección base del array recorrido
+        <pushi> i // Apilar el indice actual del recorrido
+        <pushi> elementType.numberOfBytes() // Apilar el tamaño en bytes de cada elemento del array
+        <muli> // Calcular i * tamañoElemento -> Desplazamiento dentro del array
+        <addi> // Calcular direcciónBaseArray + desplazamiento -> En la pila queda la dirección de array[i]
+        <load> elementType.suffix() // Cargar el valor almacenado en array[i]
+        cg.convertTo(elementType, expr1.type) // Convertir el elemento al tipo de la variable iteradora
+        <store> expr1.type.suffix() // Guardar el valor en la variable iteradora
+        stmt2*.forEach(s -> execute[[s]]()) // Ejecutar el cuerpo del foreach
+    }
+
 
 // ---------------------------------------
 // ADDRESS

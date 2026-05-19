@@ -165,6 +165,16 @@ public abstract class AbstractVisitor<RT, PT> implements Visitor<RT, PT> {
         return null;
     }
 
+    @Override
+    public RT visit(ForEach fe, PT param) {
+        fe.getVariable().accept(this, param);
+        fe.getCollection().accept(this, param);
+        for (Statement stmt : fe.getBody())
+            stmt.accept(this, param);
+
+        return null;
+    }
+
     // ---------------------------------------------------
     // Tipos
 

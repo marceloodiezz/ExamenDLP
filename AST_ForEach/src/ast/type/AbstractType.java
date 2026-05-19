@@ -65,6 +65,11 @@ public abstract class AbstractType implements Type {
         return new ErrorType("No se puede invocar una expresión de tipo '" + this + "' porque no es una función.", l);
     }
 
+    @Override
+    public Type foreach(Locatable l) {
+        return new ErrorType("No se puede recorrer una expresión de tip '" + this + "'. Debe ser una colección de tipo array", l);
+    }
+
 
 
     @Override

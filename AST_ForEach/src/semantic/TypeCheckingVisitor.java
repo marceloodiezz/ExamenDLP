@@ -167,6 +167,17 @@ public class TypeCheckingVisitor extends AbstractVisitor<Void, Type> {
         return null;
     }
 
+    @Override
+    public Void visit(ForEach fe, Type param) {
+        super.visit(fe, param);
+
+        // Comprobar que el elemento del array puede almacenarse en la variable iteradora
+        Type elementType = fe.getCollection().getType().foreach(fe);
+        elementType.mustPromotesTo(fe.getVariable().getType(), fe);
+
+        return null;
+    }
+
     // ---------------------------------------------------
     // Definiciones
 

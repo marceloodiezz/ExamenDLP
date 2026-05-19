@@ -34,6 +34,11 @@ public class ArrayType extends AbstractType {
     }
 
     @Override
+    public Type foreach(Locatable l) {
+        return getOf(); // Se devuelve el tipo base (of) del array
+    }
+
+    @Override
     public String toString() {
         StringBuilder str = new StringBuilder();
         str.append("ArrayType[");

@@ -81,6 +81,11 @@ public class ErrorType extends AbstractType {
     }
 
     @Override
+    public Type foreach(Locatable l){
+        return this;
+    }
+
+    @Override
     public void mustBeLogical(Locatable l) {
         // NO SE HACE NADA
     }

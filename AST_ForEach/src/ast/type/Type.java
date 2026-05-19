@@ -34,6 +34,9 @@ public interface Type extends ASTNode {
     // Invocación a funciones
     Type parenthesis(List<Type> types, Locatable l);
 
+    // Recorrido foreach
+    Type foreach(Locatable l);
+
     // Comprobar que la expresión es lógica para condiciones (If-Else y While)
     void mustBeLogical(Locatable l);
 
@@ -45,7 +48,6 @@ public interface Type extends ASTNode {
     void mustBeBuiltIn(Locatable l);
 
     int numberOfBytes();
-
 
     char suffix();
 }

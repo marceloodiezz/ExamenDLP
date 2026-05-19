@@ -25,6 +25,7 @@ G:
     (18) While: stmt1 -> expr stmt2*
     (19) IfElse: stmt1 -> expr stmt2* stmt3*
     (20) FuncCall: stmt -> expr1 expr2*
+    (32) ForEach: stmt1 -> expr1 expr2 stmt2*
 
     // Definiciones
     (21) FuncDef: def -> ID type stmt*
