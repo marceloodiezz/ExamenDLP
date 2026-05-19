@@ -38,6 +38,11 @@ public interface Visitor<RT, PT> {
     RT visit(Return ret, PT param);
     RT visit(While wh, PT param);
 
+    // Ejercicio For con Incremento
+    RT visit(For forStmt, PT param);
+    RT visit(IncDec incDec, PT param);
+    RT visit(VarDefFor varDef, PT param);
+
     // Tipos
     RT visit(ArrayType arrayType, PT param);
     RT visit(CharType charType, PT param);

@@ -343,4 +343,16 @@ public class CodeGenerator {
         out.flush();
     }
 
+    // -----------------------------------------------------------------
+    // Ejercicio For con Incremento
+
+    public void incDec(String operator, Type type) {
+        switch (operator) {
+            case "++": add(type); break;
+            case "--": sub(type); break;
+        }
+
+        out.flush();
+    }
+
 }

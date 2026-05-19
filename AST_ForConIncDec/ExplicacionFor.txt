@@ -1,0 +1,527 @@
+Paso a paso del For con ámbitos + VarDefFor + IncDec
+
+Objetivo de la extensión
+
+  - Se quiere implementar una versión completa del bucle for con ámbito propio.
+  - Además, se quiere combinar con los operadores incremento y decremento:
+      -> i++;
+      -> i--;
+  - Se crea un nuevo nodo específico VarDefFor para representar únicamente las declaraciones con inicialización dentro de la cabecera del for:
+      -> let i: int = 0
+  - Así se separa mejor la responsabilidad:
+      -> VarDef: declaración normal de variables
+      -> VarDefFor: declaración de variable propia del for con valor inicial
+      -> IncDec: incremento/decremento como sentencia
+      -> For: estructura de control con inicialización, condición, incremento y cuerpo
+
+------------------------------------------------------------------------------------
+1. Añadir clase IncDec al AST
+  - Representa los operadores:
+      i++;
+      i--;
+
+  - El incremento y decremento se tratan como sentencias.
+    Por tanto, se permite:
+      i++;
+    pero no se implementa todavía:
+      x = i++;
+      x = ++i;
+
+  - Recordar modificar el método accept para integrarlo con los visitors.
+
+------------------------------------------------------------------------------------
+2. Añadir clase For al AST
+  - La inicialización se guarda como Statement porque puede ser de dos tipos:
+      1. Asignación normal:
+           i = 0
+      2. Declaración específica del for:
+           let i: int = 0
+
+  - El incremento también se guarda como Statement porque puede ser:
+      1. Asignación normal:
+           i = i + 1
+      2. Incremento/decremento:
+           i++
+           i--
+
+  - Recordar modificar el método accept.
+
+------------------------------------------------------------------------------------
+3. Añadir clase VarDefFor al AST
+  - Esta clase representa únicamente declaraciones de variables en la inicialización del for:
+      for (let i: int = 0; i < 5; i++) {
+          ...
+      }
+
+  - La clase VarDefFor debe extender de VarDef.
+    Esto es importante porque así VarDefFor sigue siendo una definición de variable válida para:
+      -> SymbolTable
+      -> IdentificationVisitor
+      -> OffsetVisitor
+      -> AddressCGVisitor
+      -> Variables enlazadas a su definición
+
+  - initialValue representa el valor inicial de la variable:
+      let i: int = 0
+                   ^
+
+  - De esta forma evitamos modificar VarDef del proyecto base.
+    Esto deja el diseño más limpio:
+      -> VarDef no conoce casos especiales del for
+      -> VarDefFor se usa solo para la cabecera del for
+
+------------------------------------------------------------------------------------
+4. Modificar Visitor, AbstractVisitor y AbstractCGVisitor
+  - En Visitor.java se añaden los métodos visit para los nuevos nodos:
+      -> visit(For)
+      -> visit(IncDec)
+      -> visit(VarDefFor)
+
+  - En AbstractVisitor.java se añade el recorrido por defecto:
+
+      For:
+        -> visitar initialization
+        -> visitar condition
+        -> visitar increment
+        -> visitar body
+
+      IncDec:
+        -> visitar target
+
+      VarDefFor:
+        -> visitar type
+        -> visitar initialValue
+
+  - En AbstractCGVisitor.java se añaden también los visit correspondientes.
+
+------------------------------------------------------------------------------------
+5. Modificar la gramática TSmm.g4
+  - Se añade IncDec como sentencia normal:
+      i++;
+      i--;
+
+  - Se añade la regla del for dentro de statement.
+    La forma general del for será:
+      for (initialization ; condition ; increment) block
+
+  - Se crean reglas auxiliares:
+      -> forInitialization
+      -> forIncrement
+      -> assignmentFor
+      -> incDecFor
+      -> varDefFor
+
+  - forInitialization permite:
+      1. Asignación:
+           i = 0
+      2. Declaración específica del for:
+           let i: int = 0
+
+  - forIncrement permite:
+      1. Asignación:
+           i = i + 1
+      2. IncDec:
+           i++
+           i--
+
+  - assignmentFor no lleva ';' porque el ';' ya está en la cabecera del for.
+
+  - incDecFor tampoco lleva ';' porque en el for el separador lo marca la propia cabecera.
+
+  - varDefFor tampoco lleva ';' porque forma parte de:
+      for (let i: int = 0; i < 5; i++)
+
+  - Así permitimos estas combinaciones:
+      for (i = 0; i < 5; i = i + 1) ...
+      for (i = 0; i < 5; i++) ...
+      for (let i: int = 0; i < 5; i = i + 1) ...
+      for (let i: int = 0; i < 5; i++) ...
+
+------------------------------------------------------------------------------------
+6. Fase LValue
+  - Para For no hace falta una comprobación especial si el visitor recorre sus hijos.
+    La inicialización, condición, incremento y cuerpo se visitan normalmente.
+
+  - Para IncDec sí hace falta comprobación específica.
+    El target de IncDec debe ser l-value. Es decir, debe poder estar a la izquierda de una asignación.
+    -> Válidos:
+        i++;
+        v[i]++;
+        r.x++;
+    -> Inválidos:
+        3++;
+        (i + 1)++;
+        f()++;
+
+    La comprobación es:
+      -> visitar target
+      -> comprobar target.getLValue()
+      -> si no es l-value, error semántico
+
+    Esto es necesario porque ++ y -- modifican memoria.
+    Por tanto, no pueden aplicarse sobre valores temporales.
+
+------------------------------------------------------------------------------------
+7. Fase Identification
+  - El For debe abrir un nuevo ámbito.
+    Esto permite que una variable declarada en la cabecera del for solo exista dentro del propio for:
+      for (let i: int = 0; i < 5; i++) {
+          log i;
+      }
+
+      log i; // Error
+
+  - Nuevo visit(For):
+      -> st.set()
+      -> visitar initialization
+      -> visitar condition
+      -> visitar increment
+      -> visitar body
+      -> st.reset()
+
+  - El orden es importante:
+      1. Primero se visita la inicialización.
+      2. Si ahí aparece VarDefFor, se inserta en la tabla de símbolos.
+      3. Después la condición ya puede usar esa variable.
+      4. Después el incremento también puede usarla.
+      5. Después el cuerpo también puede usarla.
+
+  - VarDefFor necesita su propio visit.
+
+  - visit(VarDefFor):
+      -> insertar la variable en la tabla de símbolos
+      -> si ya existe en el mismo ámbito, error
+      -> visitar initialValue
+
+  - Como VarDefFor extiende VarDef, las variables que usen ese identificador podrán enlazarse a esa definición normalmente.
+
+------------------------------------------------------------------------------------
+8. Fase TypeChecking
+  - Para For:
+      -> visitar initialization
+      -> visitar condition
+      -> visitar increment
+      -> visitar body
+      -> comprobar que condition es lógica
+
+  - La condición debe poder usarse como condición de salto.
+      condition.getType().mustBeLogical(...)
+
+  - Para IncDec:
+      -> visitar target
+      -> comprobar que el tipo admite operación aritmética
+
+    -> Válidos:
+        int++
+        char++
+        number++
+    -> Inválidos:
+        array++
+        record++
+
+  - Para VarDefFor:
+      -> visitar initialValue para calcular su tipo
+      -> comprobar que el tipo de initialValue puede promocionar al tipo declarado
+
+  - Ejemplo válido:
+      for (let i: int = 0; i < 5; i++) {
+          ...
+      }
+
+  - Ejemplo inválido:
+      for (let i: int = 2.5; i < 5; i++) {
+          ...
+      }
+
+  - Este último debe fallar porque number no promociona a int.
+
+------------------------------------------------------------------------------------
+9. Fase Offset
+  - Aunque la variable VarDefFor tenga ámbito propio del for, su memoria se reserva dentro del marco de activación de la función.
+
+  - Por tanto, VarDefFor debe recibir offset local negativo igual que cualquier variable local.
+
+  - Ejemplo:
+      function main(): void {
+          for (let i: int = 0; i < 5; i++) {
+              ...
+          }
+      }
+
+  - La variable i puede recibir:
+      offset -2
+
+  - Si hay for anidados:
+      function main(): void {
+          for (let i: int = 0; i < 2; i++) {
+              for (let j: int = 0; j < 3; j++) {
+                  ...
+              }
+          }
+      }
+
+  - Podría quedar:
+      i offset -2
+      j offset -4
+
+  - Y la función reservaría:
+      enter 4
+
+  - visit(For) en OffsetVisitor:
+      -> visitar initialization con contexto local
+      -> visitar body con contexto local
+
+  - No es necesario visitar condition ni increment para reservar memoria, porque no declaran variables nuevas.
+
+  - visit(VarDefFor):
+      -> visitar su tipo
+      -> sumar bytes al contador de variables locales
+      -> asignar offset negativo
+
+------------------------------------------------------------------------------------
+10. Generación de código para IncDec
+
+  - IncDec se genera como una sentencia.
+
+  - Para hacer:
+      i++;
+
+  - Conceptualmente se necesita:
+      1. Apilar la dirección de i para el store final
+      2. Apilar otra vez la dirección de i para poder cargar su valor actual
+      3. Cargar el valor actual
+      4. Sumar 1 o restar 1
+      5. Guardar el nuevo valor en la dirección original
+
+  - Es importante usar conversiones:
+      -> convertTo(targetType, operationType)
+      -> convertTo(IntType, operationType)
+      -> convertTo(operationType, targetType)
+
+------------------------------------------------------------------------------------
+11. Generación de código para VarDefFor
+
+  - VarDefFor no es una declaración normal del cuerpo de la función.
+    Es una inicialización ejecutable dentro del for.
+
+  - Para:
+      let i: int = 0
+
+  - Hay que generar:
+      1. Dirección de la variable local
+      2. Valor inicial
+      3. Conversión si hace falta
+      4. Store
+
+  - Esto inicializa la variable del for en su posición del marco de pila.
+
+------------------------------------------------------------------------------------
+12. Generación de código para For
+
+  - El for se genera igual que un while con inicialización previa e incremento al final.
+
+  - Esquema:
+      execute(initialization)
+
+      etiquetaCond:
+          value(condition)
+          convertTo(condition.type, int)
+          jz etiquetaFin
+
+          execute(body)
+
+          execute(increment)
+          jmp etiquetaCond
+
+      etiquetaFin:
+
+  - Por tanto:
+      for (let i: int = 0; i < 5; i++) {
+          log i;
+      }
+
+  - Equivale a:
+      let i: int = 0;
+
+      while (i < 5) {
+          log i;
+          i++;
+      }
+
+  - La diferencia es que el ámbito de i queda limitado al for.
+
+  - El incremento puede ser:
+      -> Assignment
+      -> IncDec
+
+  - Como ambos son Statement, basta con:
+      forStmt.getIncrement().accept(this, param);
+
+------------------------------------------------------------------------------------
+13. Plantillas de código
+
+  - Se añaden o actualizan las plantillas de:
+
+      1. For
+      2. IncDec
+      3. VarDefFor
+
+------------------------------------------------------------------------------------
+14. Resumen de archivos modificados
+
+  - Nuevos archivos:
+      src/ast/statement/For.java
+      src/ast/statement/IncDec.java
+      src/ast/definition/VarDefFor.java
+
+  - Archivos modificados:
+      src/parser/TSmm.g4
+
+      src/visitor/Visitor.java
+      src/visitor/AbstractVisitor.java
+
+      src/semantic/LValueVisitor.java
+      src/semantic/IdentificationVisitor.java
+      src/semantic/TypeCheckingVisitor.java
+
+      src/codegen/AbstractCGVisitor.java
+      src/codegen/OffsetVisitor.java
+      src/codegen/ExecuteCGVisitor.java
+      src/codegen/PlantillasCodigo.txt
+
+------------------------------------------------------------------------------------
+EJEMPLOS VÁLIDOS
+
+- For con VarDefFor e incremento i++:
+    function main(): void {
+        for (let i: int = 0; i < 5; i++) {
+            log i;
+        }
+    }
+
+- For con VarDefFor y decremento i--:
+    function main(): void {
+        for (let i: int = 5; i > 0; i--) {
+            log i;
+        }
+    }
+
+- For con variable previamente declarada:
+    let i: int;
+
+    function main(): void {
+        for (i = 0; i < 5; i++) {
+            log i;
+        }
+
+        log i;
+    }
+
+- For con incremento clásico por asignación:
+    function main(): void {
+        for (let i: int = 0; i < 5; i = i + 1) {
+            log i;
+        }
+    }
+
+- IncDec como sentencia normal:
+    function main(): void {
+        let i: int;
+
+        i = 0;
+        i++;
+        log i;
+
+        i--;
+        log i;
+    }
+
+- For anidado:
+    function main(): void {
+        for (let i: int = 0; i < 2; i++) {
+            for (let j: int = 0; j < 3; j++) {
+                log i;
+                log j;
+            }
+        }
+    }
+
+- Sombreado de variables en for anidados:
+    function main(): void {
+        for (let i: int = 0; i < 2; i++) {
+            log i;
+
+            for (let i: int = 10; i < 12; i++) {
+                log i;
+            }
+
+            log i;
+        }
+    }
+
+------------------------------------------------------------------------------------
+EJEMPLOS INVÁLIDOS
+
+- Usar fuera del for una variable declarada dentro del for:
+    function main(): void {
+        for (let i: int = 0; i < 5; i++) {
+            log i;
+        }
+
+        log i; // Error: i no existe fuera del for
+    }
+
+- Inicialización con tipo incompatible:
+    function main(): void {
+        for (let i: int = 2.5; i < 5; i++) { // Error
+            log i;
+        }
+    }
+
+- IncDec sobre un literal:
+    function main(): void {
+        3++; // Error: no es l-value
+    }
+
+- IncDec sobre una expresión aritmética:
+    function main(): void {
+        let i: int;
+
+        i = 0;
+        (i + 1)++; // Error: no es l-value
+    }
+
+- IncDec sobre variable no declarada:
+    function main(): void {
+        j++; // Error: j no está declarada
+    }
+
+- Incremento del for con variable no declarada:
+    function main(): void {
+        for (let i: int = 0; i < 5; j++) { // Error: j no está declarada
+            log i;
+        }
+    }
+
+- For con inicialización por asignación a variable no declarada:
+    function main(): void {
+        for (i = 0; i < 5; i++) { // Error: i no está declarada
+            log i;
+        }
+    }
+
+- IncDec sobre array completo:
+    let v: [3]int;
+
+    function main(): void {
+        v++; // Error: un array no admite operación aritmética
+    }
+
+- IncDec sobre record completo:
+    let r: record {
+        x: int;
+    };
+
+    function main(): void {
+        r++; // Error: un record no admite operación aritmética
+    }

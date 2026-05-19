@@ -46,6 +46,11 @@ G:
     // Programa
     (31) Program: program -> def*
 
+    // Ejercicio For con Incremento
+    (32) For: stmt1 -> stmt2 expr stmt3 stmt4*
+    (33) IncDec: stmt -> expr ( ++ || -- )
+    (34) VarDefFor: def -> ID type expr
+
 R:
     (21) // FuncDef
         bytesLocalSum = 0;
@@ -87,3 +92,5 @@ R:
 
             // visit(f.type);
         }
+
+    (32) // For

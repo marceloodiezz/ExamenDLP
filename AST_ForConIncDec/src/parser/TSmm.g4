@@ -162,9 +162,11 @@ statement returns [List<Statement> ast = new ArrayList<>()] locals [List<Express
          // Log
          'log' e1=expression { $ast.add(new Log($e1.ast, $e1.ast.getLine(), $e1.ast.getColumn())); }
          (',' e2=expression { $ast.add(new Log($e2.ast, $e2.ast.getLine(), $e2.ast.getColumn())); } )* ';'
+
          // Input
          | 'input' e1=expression { $ast.add(new Input($e1.ast, $e1.ast.getLine(), $e1.ast.getColumn())); }
            (',' e2=expression { $ast.add(new Input($e2.ast, $e2.ast.getLine(), $e2.ast.getColumn())); } )* ';'
+
          // FuncCall
          | ID '(' (e1=expression { $args.add($e1.ast); } (',' e2=expression { $args.add($e2.ast); })*)? ')' ';'
              {
@@ -174,12 +176,21 @@ statement returns [List<Statement> ast = new ArrayList<>()] locals [List<Express
                                        $ID.getLine(),
                                        $ID.getCharPositionInLine()+1));
              }
+
          // Assignment
          | e1=expression '=' e2=expression ';'
              { $ast.add(new Assignment($e1.ast,
                                        $e2.ast,
                                        $e1.ast.getLine(),
                                        $e1.ast.getColumn())); }
+
+         // IncDec
+         | e1=expression OP=('++'|'--') ';'
+             { $ast.add(new IncDec($e1.ast,
+                                   $OP.getText(),
+                                   $e1.ast.getLine(),
+                                   $e1.ast.getColumn())); }
+
          // If-Else
          | 'if' '(' e1=expression ')' b1=block ('else' b2=block { $elseBlock = $b2.ast; } )?
              { $ast.add(new IfElse($e1.ast,
@@ -187,17 +198,63 @@ statement returns [List<Statement> ast = new ArrayList<>()] locals [List<Express
                                    $elseBlock,
                                    $e1.ast.getLine(),
                                    $e1.ast.getColumn())); }
+
          // While
          | 'while' '(' e1=expression ')' b1=block
              { $ast.add(new While($e1.ast,
                                   $b1.ast,
                                   $e1.ast.getLine(),
                                   $e1.ast.getColumn())); }
+
+         // For
+         | 'for' '(' init=initializationFor ';' cond=expression ';' inc=incrementFor ')' b1=block
+             { $ast.add(new For($init.ast,
+                                $cond.ast,
+                                $inc.ast,
+                                $b1.ast,
+                                $init.ast.getLine(),
+                                $init.ast.getColumn())); }
+
          // Return
          | 'return' e1=expression ';'
              { $ast.add(new Return($e1.ast,
                                    $e1.ast.getLine(),
                                    $e1.ast.getColumn())); }
+         ;
+
+initializationFor returns [Statement ast] :
+                 a=assignmentFor { $ast = $a.ast; }
+                 | v=varDefFor { $ast = $v.ast; }
+                 ;
+
+incrementFor returns [Statement ast] :
+            a=assignmentFor { $ast = $a.ast; }
+            | i=incDecFor { $ast = $i.ast; }
+            ;
+
+assignmentFor returns [Statement ast] :
+             e1=expression '=' e2=expression
+                 { $ast = new Assignment($e1.ast,
+                                         $e2.ast,
+                                         $e1.ast.getLine(),
+                                         $e1.ast.getColumn()); }
+             ;
+
+incDecFor returns [Statement ast] :
+         e1=expression OP=('++'|'--')
+             { $ast = new IncDec($e1.ast,
+                                 $OP.getText(),
+                                 $e1.ast.getLine(),
+                                 $e1.ast.getColumn()); }
+         ;
+
+varDefFor returns [Statement ast] :
+         'let' ID ':' t=type '=' e1=expression
+             { $ast = new VarDefFor($ID.getText(),
+                                    $t.ast,
+                                    $e1.ast,
+                                    $ID.getLine(),
+                                    $ID.getCharPositionInLine()+1); }
          ;
 
 block returns [List<Statement> ast = new ArrayList<>()] :

@@ -14,6 +14,7 @@ public class IdentificationVisitor extends AbstractVisitor<Void, Void> {
     // ---------------------------------------------------
     // Expresiones
 
+    @Override
     public Void visit(Variable var, Void param) {
         Definition def = st.find(var.getName());
         if (def != null)
@@ -29,6 +30,7 @@ public class IdentificationVisitor extends AbstractVisitor<Void, Void> {
     // ---------------------------------------------------
     // Definiciones
 
+    @Override
     public Void visit(FuncDef funcDef, Void param) {
         if (!st.insert(funcDef))
             new ErrorType("FunctionDefinition: La función '" + funcDef.getName() + "' ya ha sido declarada.", funcDef);
@@ -39,11 +41,40 @@ public class IdentificationVisitor extends AbstractVisitor<Void, Void> {
         return null;
     }
 
+    @Override
     public Void visit (VarDef varDef, Void param) {
         if (!st.insert(varDef))
             new ErrorType("VariableDefinition: La variable '" + varDef.getName() + "' ya ha sido declarada.", varDef);
 
         super.visit(varDef, param);
+
+        return null;
+    }
+
+    // ---------------------------------------------------
+    // Ejercicio For con Incremento
+
+    @Override
+    public Void visit(For forStmt, Void param) {
+        st.set();
+
+        forStmt.getInitialization().accept(this, param);
+        forStmt.getCondition().accept(this, param);
+        forStmt.getIncrement().accept(this, param);
+        for (Statement stmt : forStmt.getBody())
+            stmt.accept(this, param);
+
+        st.reset();
+
+        return null;
+    }
+
+    @Override
+    public Void visit(VarDefFor varDef, Void param) {
+        if (!st.insert(varDef))
+            new ErrorType("VarDefFor: La variable '" + varDef.getName() + "' ya ha sido declarada en este ámbito.", varDef);
+
+        varDef.getInitialValue().accept(this, param);
 
         return null;
     }

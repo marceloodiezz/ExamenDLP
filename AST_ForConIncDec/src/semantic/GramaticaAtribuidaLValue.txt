@@ -43,6 +43,11 @@ G:
     // Programa
     (31) Program: program -> def*
 
+    // Ejercicio For con Incremento
+    (32) For: stmt1 -> stmt2 expr stmt3 stmt4*
+    (33) IncDec: stmt -> expr ( ++ || -- )
+    (34) VarDefFor: def -> ID type expr
+
 R:
     (01) // IntLiteral
         expr.lvalue = false;
@@ -90,3 +95,7 @@ R:
     (17) // Assignment
         if (!expr1.lvalue)
             error("El lado izq de la asignación debe ser lvalue");
+
+    (33) // IncDec
+        if (!expr.lvalue)
+            error("La expresión debe ser lvalue");

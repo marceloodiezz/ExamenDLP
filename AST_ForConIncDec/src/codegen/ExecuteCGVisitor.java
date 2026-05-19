@@ -253,4 +253,130 @@ public class ExecuteCGVisitor extends AbstractCGVisitor<Void, FuncDef> {
         return null;
     }
 
+    // -----------------------------------------------------------------------
+    // Ejercicio For con Incremento
+
+    /**
+     * execute[[ IncDec: stmt -> expr OP ]]() =
+     *     Type targetType = expr.type
+     *     Type operationType = targetType.arithmetic(IntType, stmt);
+     *     address[[expr]]()
+     *     address[[expr]]()
+     *     <load> targetType.suffix()
+     *     cg.convertTo(targetType, operationType)
+     *     <pushi> 1
+     *     cg.convertTo(IntType, operationType)
+     *     cg.incDec(OP, operationType)
+     *     cg.convertTo(operationType, expr.type)
+     *     <store> targetType.suffix()
+     */
+    @Override
+    public Void visit(IncDec incDec, FuncDef param) {
+        Type targetType = incDec.getTarget().getType();
+        Type operationType = targetType.arithmetic(IntType.getInstance(), incDec);
+
+        getCodeGenerator().commentLine(incDec.getLine());
+        getCodeGenerator().comment("IncDec " + incDec.getOperator());
+
+        // Dirección donde se almacenará el resultado final
+        incDec.getTarget().accept(addressCGVisitor, null);
+
+        // Valor actual de la expresión
+        incDec.getTarget().accept(addressCGVisitor, null);
+        getCodeGenerator().load(targetType);
+        getCodeGenerator().convertTo(targetType, operationType);
+
+        // Constante 1
+        getCodeGenerator().pushi(1);
+        getCodeGenerator().convertTo(IntType.getInstance(), operationType);
+
+        // Sumar o restar
+        getCodeGenerator().incDec(incDec.getOperator(), operationType);
+
+        // Convertir el resultado al tipo original y almacenarlo
+        getCodeGenerator().convertTo(operationType, targetType);
+        getCodeGenerator().store(targetType);
+
+        return null;
+    }
+
+    /**
+     * execute[[ VarDefFor: def -> ID type expr ]]() =
+     *     <' *> type ID <(offset> def.offset <)>
+     *     <pusha bp>
+     *     <pushi> def.offset
+     *     <addi>
+     *     value[[expr]]()
+     *     cg.convertTo(expr.type, type)
+     *     <store> type.suffix()
+     */
+    @Override
+    public Void visit(VarDefFor varDef, FuncDef param) {
+        getCodeGenerator().commentLine(varDef.getLine());
+        getCodeGenerator().comment("FarDefFor " + varDef.getName());
+
+        getCodeGenerator().comment(varDef.getType().toString() + " " + varDef.getName() + " (offset " + varDef.getOffset() + ")");
+
+        getCodeGenerator().pushBP();
+        getCodeGenerator().pushi(varDef.getOffset());
+        getCodeGenerator().add(IntType.getInstance());
+
+        varDef.getInitialValue().accept(valueCGVisitor, null);
+        getCodeGenerator().convertTo(varDef.getInitialValue().getType(), varDef.getType());
+        getCodeGenerator().store(varDef.getType());
+
+        return null;
+    }
+
+    /**
+     * execute[[ For: stmt1 -> stmt2 expr stmt3 stmt4* ]]() =
+     *     String condLabel = cg.getLabel()
+     *     String endLabel = cg.getLabel()
+     *     execute[[stmt2]]()
+     *     cond <:>
+     *     value[[expr]]()
+     *     cg.convertTo(expr.type, IntType)
+     *     <jz> end
+     *     stmt4*.forEach(s -> execute[[s]]())
+     *     execute[[stmt3]]
+     *     <jmp> cond
+     *     end <:>
+     */
+    @Override
+    public Void visit(For forStmt, FuncDef param) {
+        String condLabel = getCodeGenerator().getLabel();
+        String endLabel = getCodeGenerator().getLabel();
+
+        getCodeGenerator().commentLine(forStmt.getLine());
+        getCodeGenerator().comment("For");
+
+        // Ejecutar inicialización
+        forStmt.getInitialization().accept(this, param);
+
+        // Etiqueta para evaluar la condición
+        getCodeGenerator().label(condLabel);
+
+        // Evaluar condición
+        forStmt.getCondition().accept(valueCGVisitor, null);
+        getCodeGenerator().convertTo(forStmt.getCondition().getType(), IntType.getInstance());
+
+        // Saltar al final si la condición es falsa (0)
+        getCodeGenerator().jz(endLabel);
+
+        // Ejecutar cuerpo del bucle for
+        for (Statement st : forStmt.getBody())
+            st.accept(this, param);
+
+        // Ejecutar incremento
+        forStmt.getIncrement().accept(this, param);
+
+        // Volver a evaluar la condición -> Nueva iteración
+        getCodeGenerator().jmp(condLabel);
+
+        // Salida del bucle
+        getCodeGenerator().label(endLabel);
+
+        return null;
+    }
+
 }

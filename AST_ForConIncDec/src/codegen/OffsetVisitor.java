@@ -2,6 +2,8 @@ package codegen;
 
 import ast.definition.FuncDef;
 import ast.definition.VarDef;
+import ast.definition.VarDefFor;
+import ast.statement.For;
 import ast.statement.Statement;
 import ast.type.FuncType;
 import ast.type.RecordField;
@@ -87,6 +89,29 @@ public class OffsetVisitor extends AbstractVisitor<Void, Boolean> {
             // Para soportar records anidados dentro de campos
             rf.getTargetType().accept(this, null);
         }
+
+        return null;
+    }
+
+    @Override
+    public Void visit(For forStmt, Boolean param) {
+        // Offset para las variables locales declaradas en la inicialización del bucle
+        forStmt.getInitialization().accept(this, true);
+
+        // Offser para las variables locales declaradas en el cuerpo del bucle
+        for (Statement stmt : forStmt.getBody())
+            stmt.accept(this, true);
+
+        return null;
+    }
+
+    @Override
+    public Void visit (VarDefFor varDef, Boolean isLocal) {
+        varDef.getType().accept(this, null);
+
+        // Offset negativo respecto a BP, como cualquier variable local
+        bytesLocalSum += varDef.getType().numberOfBytes();
+        varDef.setOffset(-bytesLocalSum);
 
         return null;
     }

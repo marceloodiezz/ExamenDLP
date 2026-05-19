@@ -1,6 +1,7 @@
 package semantic;
 
 import ast.definition.FuncDef;
+import ast.definition.VarDefFor;
 import ast.expression.*;
 import ast.statement.*;
 import ast.type.*;
@@ -178,6 +179,35 @@ public class TypeCheckingVisitor extends AbstractVisitor<Void, Type> {
 
         for (Statement stmt : f.getBody())
             stmt.accept(this, returnType);
+
+        return null;
+    }
+
+    // ---------------------------------------------------
+    // Ejercicio For con Incremento
+
+    @Override
+    public Void visit(For forStmt, Type param) {
+        super.visit(forStmt, param);
+
+        forStmt.getCondition().getType().mustBeLogical(forStmt);
+
+        return null;
+    }
+
+    @Override
+    public Void visit(IncDec incDec, Type param) {
+        super.visit(incDec, param);
+
+        incDec.getTarget().getType().arithmetic(incDec);
+
+        return null;
+    }
+
+    @Override
+    public Void visit(VarDefFor varDef, Type param) {
+        varDef.getInitialValue().accept(this, param);
+        varDef.getInitialValue().getType().mustPromotesTo(varDef.getType(), varDef);
 
         return null;
     }

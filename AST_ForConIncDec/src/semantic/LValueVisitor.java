@@ -3,6 +3,7 @@ package semantic;
 import ast.expression.*;
 import ast.statement.Assignment;
 import ast.statement.FuncCall;
+import ast.statement.IncDec;
 import ast.statement.Input;
 import ast.type.ErrorType;
 import visitor.AbstractVisitor;
@@ -133,6 +134,19 @@ public class LValueVisitor extends AbstractVisitor<Void, Void> {
         super.visit(assignment, param);
         if (!assignment.getLeft().getLValue())
             new ErrorType("Assignment: El lado izquierdo debe ser direccionable (lValue)" , assignment.getLeft());
+
+        return null;
+    }
+
+    // ---------------------------------------------------
+    // Ejercicio For con Incremento
+
+    @Override
+    public Void visit(IncDec incDec, Void param) {
+        super.visit(incDec, param);
+
+        if (!incDec.getTarget().getLValue())
+            new ErrorType("IncDec: La expresión debe ser direccionable (lValue)", incDec.getTarget());
 
         return null;
     }

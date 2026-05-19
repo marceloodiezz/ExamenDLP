@@ -44,6 +44,11 @@ G:
     // Programa
     (31) Program: program -> def*
 
+    // Ejercicio For con Incremento
+    (32) For: stmt1 -> stmt2 expr stmt3 stmt4*
+    (33) IncDec: stmt -> expr ( ++ || -- )
+    (34) VarDefFor: def -> ID type expr
+
 R:
     (01) // IntLiteral
         expr.type = IntType.getInstance();
@@ -110,3 +115,12 @@ R:
         Type returnType = ((FuncType) type).getReturnType();
         for (Stmt s : stmt*)
             // visit(s, returnType);
+
+    (32) // For
+        expr.type.mustBeLogical(stmt1);
+
+    (33) // IncDec
+        expr.type.arithmetic(stmt);
+
+    (34) // VarDefFor
+        expr.type.mustPromotesTo(type, def)

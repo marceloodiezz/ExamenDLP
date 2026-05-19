@@ -204,3 +204,44 @@ value[[ FuncCall: expr1 -> expr2 expr3* ]]() =
         cg.convertTo(expr3*.get(i).type, expr2.type.params.get(i).type)
     }
     <call> (expr2.name)
+
+// ----------------------------------------------------
+// Ejercicio For con Incremento
+
+// IncDec
+execute[[ IncDec: stmt -> expr OP ]]() =
+    Type targetType = expr.type
+    Type operationType = targetType.arithmetic(IntType, stmt);
+    address[[expr]]()
+    address[[expr]]()
+    <load> targetType.suffix()
+    cg.convertTo(targetType, operationType)
+    <pushi> 1
+    cg.convertTo(IntType, operationType)
+    cg.incDec(OP, operationType)
+    cg.convertTo(operationType, expr.type)
+    <store> targetType.suffix()
+
+// VarDefFor
+execute[[ VarDefFor: def -> ID type expr ]]() =
+    <' *> type ID <(offset> def.offset <)>
+    <pusha bp>
+    <pushi> def.offset
+    <addi>
+    value[[expr]]()
+    cg.convertTo(expr.type, type)
+    <store> type.suffix()
+
+// For
+execute[[ For: stmt1 -> stmt2 expr stmt3 stmt4* ]]() =
+    String condLabel = cg.getLabel()
+    String endLabel = cg.getLabel()
+    execute[[stmt2]]() // Ejecutar inicialización
+    cond <:> // Etiqueta para evaluar condición
+    value[[expr]]() // Evaluar condición
+    cg.convertTo(expr.type, IntType) // Convertir a entero (valor booleano)
+    <jz> end // Saltar al final si la condición es falsa (0)
+    stmt4*.forEach(s -> execute[[s]]()) // Ejecutar cuerpo del for
+    execute[[stmt3]] // Ejecutar incremento
+    <jmp> cond // Volver a evaluar la condición -> Nueva iteración
+    end <:> // Salida del bucle

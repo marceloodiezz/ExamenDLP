@@ -43,6 +43,11 @@ G:
     // Programa
     (31) Program: program -> def*
 
+    // Ejercicio For con Incremento
+    (32) For: stmt1 -> stmt2 expr stmt3 stmt4*
+    (33) IncDec: stmt -> expr ( ++ || -- )
+    (34) VarDefFor: def -> ID type expr
+
 R:
     (04) // Variable
         Definition def = st.find(ID);
@@ -61,5 +66,14 @@ R:
         st.reset();
 
     (22) // VarDef
+        if (!st.insert(def))
+            error("La variable 'ID' ya ha sido declarada");
+
+    (32) // For
+        st.set()
+        // ...
+        st.reset()
+
+    (34) // VarDefFor
         if (!st.insert(def))
             error("La variable 'ID' ya ha sido declarada");

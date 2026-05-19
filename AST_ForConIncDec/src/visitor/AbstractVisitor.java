@@ -223,4 +223,34 @@ public abstract class AbstractVisitor<RT, PT> implements Visitor<RT, PT> {
         return null;
     }
 
+
+    // ---------------------------------------------------
+    // Ejercicio For con Incremento
+
+    @Override
+    public RT visit(For forStmt, PT param) {
+        forStmt.getInitialization().accept(this, param);
+        forStmt.getCondition().accept(this, param);
+        forStmt.getIncrement().accept(this, param);
+        for(Statement stmt : forStmt.getBody())
+            stmt.accept(this, param);
+
+        return null;
+    }
+
+    @Override
+    public RT visit(IncDec incDec, PT param) {
+        incDec.getTarget().accept(this, param);
+
+        return null;
+    }
+
+    @Override
+    public RT visit(VarDefFor varDef, PT param) {
+        varDef.getType().accept(this, param);
+        varDef.getInitialValue().accept(this, param);
+
+        return null;
+    }
+
 }

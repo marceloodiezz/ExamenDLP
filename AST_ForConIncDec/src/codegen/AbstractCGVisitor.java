@@ -173,4 +173,22 @@ public abstract class AbstractCGVisitor<RT, PT> implements Visitor<RT, PT> {
     public RT visit(VoidType voidType, PT param) {
         throw new IllegalStateException("Generación de código no implementada para el nodo: " + voidType);
     }
+
+    // Ejercicio For con Incremento
+
+    @Override
+    public RT visit(For forStmt, PT param) {
+        throw new IllegalStateException("Generación de código no implementada para el nodo: " + forStmt);
+    }
+
+    @Override
+    public RT visit(IncDec incDec, PT param) {
+        throw new IllegalStateException("Generación de código no implementada para el nodo: " + incDec);
+    }
+
+    @Override
+    public RT visit(VarDefFor varDef, PT param) {
+        throw new IllegalStateException("Generación de código no implementada para el nodo: " + varDef);
+    }
+
 }
