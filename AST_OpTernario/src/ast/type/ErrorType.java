@@ -51,6 +51,11 @@ public class ErrorType extends AbstractType {
     }
 
     @Override
+    public Type ternary(Type other, Locatable l) {
+        return this;
+    }
+
+    @Override
     public Type arithmetic(Locatable l) {
         return this;
     }
