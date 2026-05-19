@@ -1,0 +1,20 @@
+Paso a paso del DoWhile
+
+1. Añadir clase al AST
+  - Recordar modificar accept
+
+2. Añadir visit al Visitor, AbstractVisitor y AbstractCGVisitor
+
+3. Añadir la regla para ANTLR en TSmm.g4
+  - Acordarse de generar recognizer
+
+4. Fase LValue -> Nada
+
+5. Fase Identification -> Nada
+
+6. Fase TypeChecking -> Condiciónenlas debe ser lógica
+
+7. Añadir a plantillas de código 
+  - Solo en execute
+
+8. Añadir al ExecuteCGVisitors
