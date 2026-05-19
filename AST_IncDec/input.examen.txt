@@ -29,6 +29,6 @@ function main(): void{
     v[0] = 10;
     v[0]++;
     log v[0];
-    
+
 
 }
