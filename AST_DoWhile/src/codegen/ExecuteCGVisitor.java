@@ -126,17 +126,14 @@ public class ExecuteCGVisitor extends AbstractCGVisitor<Void, FuncDef> {
     /**
      * execute[[ DoWhile: stmt1 -> stmt2* expr ]]() =
      *     String start = cg.getLabel()
-     *     String end = cg.getLabel()
      *     start <:>
      *     stmt2*.forEach(s -> execute[[s]]())
      *     value[[expr]]()
      *     cg.convertTo(expr.type, IntType)
      *     <jnz> start
-     *     end <:>
      */
     public Void visit(DoWhile dw, FuncDef param) {
         String startLabel = getCodeGenerator().getLabel();
-        String endLabel = getCodeGenerator().getLabel();
 
         getCodeGenerator().commentLine(dw.getLine());
         getCodeGenerator().comment("DoWhile");
@@ -149,8 +146,6 @@ public class ExecuteCGVisitor extends AbstractCGVisitor<Void, FuncDef> {
         getCodeGenerator().convertTo(dw.getCondition().getType(), IntType.getInstance());
 
         getCodeGenerator().jnz(startLabel);
-
-        getCodeGenerator().label(endLabel);
 
         return null;
     }

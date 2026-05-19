@@ -44,13 +44,11 @@ execute[[ While: stmt1 -> expr stmt2* ]]() =
 // DoWhile
 execute[[ DoWhile: stmt1 -> stmt2* expr ]]() =
     String start = cg.getLabel()
-    String end = cg.getLabel()
     start <:>
     stmt2*.forEach(s -> execute[[s]]())
     value[[expr]]()
     cg.convertTo(expr.type, IntType)
     <jnz> start
-    end <:>
 
 // If-Else
 execute[[ IfElse: stmt1 -> expr stmt2* stmt3* ]]() =
