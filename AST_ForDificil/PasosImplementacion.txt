@@ -1,0 +1,41 @@
+1. Léxico
+   - Añadir tokens si hacen falta.
+
+2. Sintaxis concreta
+   - Añadir regla en la gramática ANTLR.
+
+3. Sintaxis abstracta
+   - Decidir producción abstracta.
+   - Crear clase AST.
+
+4. Construcción del AST
+   - Modificar el parser/grammar actions o visitor de construcción.
+
+5. Visitor base
+   - Añadir visit del nuevo nodo.
+
+6. Identificación
+   - Visitar subnodos.
+   - Abrir ámbito si corresponde.
+   - Enlazar variables/funciones si aparecen dentro.
+
+7. Type checking
+   - Comprobar tipos de expresiones.
+   - Comprobar condiciones.
+   - Calcular type y lvalue si es expresión.
+
+8. Offset
+   - Si introduce variables o ámbito, calcular offsets.
+   - Si no declara nada, normalmente solo recorrer hijos.
+
+9. Generación de código
+   - Si es sentencia: execute.
+   - Si es expresión: value.
+   - Si es asignable: address.
+   - Usar etiquetas si hay control de flujo.
+
+10. Tests
+   - Programa correcto.
+   - Errores léxicos/sintácticos si aplica.
+   - Errores semánticos.
+   - Código generado esperado.
