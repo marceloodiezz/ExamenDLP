@@ -174,6 +174,12 @@ statement returns [List<Statement> ast = new ArrayList<>()] locals [List<Express
                                        $ID.getLine(),
                                        $ID.getCharPositionInLine()+1));
              }
+         // IncDec
+         | e1=expression OP=('++'|'--') ';'
+             { $ast.add(new IncDec($e1.ast,
+                                   $OP.getText(),
+                                   $e1.ast.getLine(),
+                                   $e1.ast.getColumn())); }
          // Assignment
          | e1=expression '=' e2=expression ';'
              { $ast.add(new Assignment($e1.ast,

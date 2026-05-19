@@ -1,228 +1,182 @@
 
 #source	"input.examen.txt"
 
-	' * char c (offset 0)
-	' * int i (offset 1)
-	' * real r (offset 3)
+	' * int x (offset 0)
+	' * real y (offset 2)
+	' * char c (offset 6)
+	' * ArrayType[of:int,size:5] v (offset 7)
 
 ' Invocation to the main function
 call main
 halt
 
-#line	5
+#line	7
 
 main:
 	' * Parameters:
 	' * Local Variables:
-	' * int a (offset -2)
-	' * int i (offset -4)
-	enter	4
+	enter	0
 
-#line	8
+#line	9
 	' * Assignment
 	pusha	0
-	pushb	97
-	storeb
+	pushi	1
+	storei
 
-#line	9
-	' * Write
-	pusha	0
-	loadb
-	outb
-
-#line	9
-	' * Write
-	pushb	10
-	outb
+#line	10
+	' * Assignment
+	pusha	2
+	pushf	2.5
+	storef
 
 #line	11
 	' * Assignment
-	pusha	bp
-	pushi	-2
+	pusha	6
+	pushb	97
+	storeb
+
+#line	13
+	' * IncDec ++
+	pusha	0
+	pusha	0
+	loadi
+	pushi	1
 	addi
-	pushf	1.5
-	f2i
 	storei
 
-#line	12
-	' * Assignment
-	pusha	bp
-	pushi	-4
+#line	14
+	' * IncDec ++
+	pusha	0
+	pusha	0
+	loadi
+	pushi	1
 	addi
-	pushb	48
-	b2i
-	pushi	3
-	muli
 	storei
-
-#line	13
-	' * Write
-	pusha	bp
-	pushi	-2
-	addi
-	loadi
-	outi
-
-#line	13
-	' * Write
-	pushb	32
-	outb
-
-#line	13
-	' * Write
-	pusha	bp
-	pushi	-4
-	addi
-	loadi
-	outi
-
-#line	13
-	' * Write
-	pushb	10
-	outb
 
 #line	15
-	' * Read
-	pusha	3
-	inf
+	' * IncDec --
+	pusha	0
+	pusha	0
+	loadi
+	pushi	1
+	subi
+	storei
+
+#line	17
+	' * IncDec ++
+	pusha	2
+	pusha	2
+	loadf
+	pushi	1
+	i2f
+	addf
 	storef
 
-#line	16
-	' * Write
-	pushi	2
-	i2f
-	pusha	3
+#line	18
+	' * IncDec ++
+	pusha	2
+	pusha	2
 	loadf
-	mulf
-	outf
-
-#line	16
-	' * Write
-	pushb	10
-	outb
-
-#line	18
-	' * Write
-	pushi	3
+	pushi	1
 	i2f
-	pushf	4.5
+	addf
+	storef
+
+#line	19
+	' * IncDec --
+	pusha	2
+	pusha	2
+	loadf
+	pushi	1
+	i2f
 	subf
-	outf
-
-#line	18
-	' * Write
-	pushb	32
-	outb
-
-#line	19
-	' * Write
-	pushb	48
-	b2i
-	i2f
-	pushf	48.0
-	divf
-	outf
-
-#line	19
-	' * Write
-	pushb	32
-	outb
-
-#line	20
-	' * Write
-	pushb	48
-	b2i
-	pushb	49
-	b2i
-	modi
-	outi
-
-#line	20
-	' * Write
-	pushb	32
-	outb
+	storef
 
 #line	21
-	' * Write
-	pushi	0
-	pushb	49
+	' * IncDec ++
+	pusha	6
+	pusha	6
+	loadb
 	b2i
+	pushi	1
 	addi
-	outi
-
-#line	21
-	' * Write
-	pushb	10
-	outb
+	i2b
+	storeb
 
 #line	22
-	' * Write
+	' * IncDec ++
+	pusha	6
+	pusha	6
+	loadb
+	b2i
 	pushi	1
-	pushi	2
-	lti
-	outi
-
-#line	22
-	' * Write
-	pushb	32
-	outb
+	addi
+	i2b
+	storeb
 
 #line	23
-	' * Write
-	pushi	4
-	pushi	3
-	gei
-	outi
-
-#line	23
-	' * Write
-	pushb	32
-	outb
-
-#line	24
-	' * Write
-	pushi	5
-	pushi	5
-	eqi
-	outi
-
-#line	24
-	' * Write
-	pushb	32
-	outb
+	' * IncDec --
+	pusha	6
+	pusha	6
+	loadb
+	b2i
+	pushi	1
+	subi
+	i2b
+	storeb
 
 #line	25
 	' * Write
-	pushi	1
-	pushi	2
-	and
-	outi
-
-#line	25
-	' * Write
-	pushb	32
-	outb
-
-#line	26
-	' * Write
-	pushi	0
-	pushi	3
-	or
+	pusha	0
+	loadi
 	outi
 
 #line	26
 	' * Write
-	pushb	32
-	outb
+	pusha	2
+	loadf
+	outf
 
 #line	27
 	' * Write
+	pusha	6
+	loadb
+	outb
+
+#line	29
+	' * Assignment
+	pusha	7
 	pushi	0
-	not
-	outi
+	pushi	2
+	muli
+	addi
+	pushi	10
+	storei
 
-#line	27
+#line	30
+	' * IncDec ++
+	pusha	7
+	pushi	0
+	pushi	2
+	muli
+	addi
+	pusha	7
+	pushi	0
+	pushi	2
+	muli
+	addi
+	loadi
+	pushi	1
+	addi
+	storei
+
+#line	31
 	' * Write
-	pushb	10
-	outb
-	ret	0, 4, 0
+	pusha	7
+	pushi	0
+	pushi	2
+	muli
+	addi
+	loadi
+	outi
+	ret	0, 0, 0

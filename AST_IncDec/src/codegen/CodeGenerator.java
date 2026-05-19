@@ -101,6 +101,15 @@ public class CodeGenerator {
         out.flush();
     }
 
+    public void incDec(String operator, Type type) {
+        switch (operator) {
+            case "++": add(type); break;
+            case "--": sub(type); break;
+        }
+
+        out.flush();
+    }
+
     public void add(Type type) {
         out.println("\tadd" + type.suffix());
 

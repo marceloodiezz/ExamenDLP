@@ -165,6 +165,12 @@ public abstract class AbstractVisitor<RT, PT> implements Visitor<RT, PT> {
         return null;
     }
 
+    @Override
+    public RT visit(IncDec incDec, PT param) {
+        incDec.getTarget().accept(this, param);
+        return null;
+    }
+
     // ---------------------------------------------------
     // Tipos
 

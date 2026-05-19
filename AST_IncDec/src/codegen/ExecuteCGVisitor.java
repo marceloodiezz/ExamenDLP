@@ -159,6 +159,50 @@ public class ExecuteCGVisitor extends AbstractCGVisitor<Void, FuncDef> {
     }
 
     /**
+     * execute[[ IncDec: stmt -> expr OP ]]() =
+     *     Type targetType = expr.type
+     *     Type operationType = targetType.arithmetic(IntType, stmt);
+     *     address[[expr]]()
+     *     address[[expr]]()
+     *     <load> targetType.suffix()
+     *     cg.convertTo(targetType, operationType)
+     *     <pushi> 1
+     *     cg.convertTo(IntType, operationType)
+     *     cg.incDec(OP, operationType)
+     *     cg.convertTo(operationType, expr.type)
+     *     <store> targetType.suffix()
+     */
+    @Override
+    public Void visit(IncDec incDec, FuncDef param) {
+        Type targetType = incDec.getTarget().getType();
+        Type operationType = targetType.arithmetic(IntType.getInstance(), incDec);
+
+        getCodeGenerator().commentLine(incDec.getLine());
+        getCodeGenerator().comment("IncDec " + incDec.getOperator());
+
+        // Dirección donde se almacenará el resultado final
+        incDec.getTarget().accept(addressCGVisitor, null);
+
+        // Valor actual de la expresión
+        incDec.getTarget().accept(addressCGVisitor, null);
+        getCodeGenerator().load(targetType);
+        getCodeGenerator().convertTo(targetType, operationType);
+
+        // Constante 1
+        getCodeGenerator().pushi(1);
+        getCodeGenerator().convertTo(IntType.getInstance(), operationType);
+
+        // Sumar o restar
+        getCodeGenerator().incDec(incDec.getOperator(), operationType);
+
+        // Convertir el resultado al tipo original y almacenarlo
+        getCodeGenerator().convertTo(operationType, targetType);
+        getCodeGenerator().store(targetType);
+
+        return null;
+    }
+
+    /**
      * execute[[ FuncCall: stmt -> expr1 expr2* ]]() =
      *     value[[(Expression) stmt]]()
      *     if (expr1.type.returnType != VoidType)

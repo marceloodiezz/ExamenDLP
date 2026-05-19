@@ -91,6 +91,20 @@ execute[[ Program: program -> def* ]]() =
         if (d instanceof FuncDef)
             execute[[d]]()
 
+// IncDec
+execute[[ IncDec: stmt -> expr OP ]]() =
+    Type targetType = expr.type
+    Type operationType = targetType.arithmetic(IntType, stmt);
+    address[[expr]]()
+    address[[expr]]()
+    <load> targetType.suffix()
+    cg.convertTo(targetType, operationType)
+    <pushi> 1
+    cg.convertTo(IntType, operationType)
+    cg.incDec(OP, operationType)
+    cg.convertTo(operationType, expr.type)
+    <store> targetType.suffix()
+
 
 // ---------------------------------------
 // ADDRESS

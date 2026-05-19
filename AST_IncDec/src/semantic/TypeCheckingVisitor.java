@@ -167,6 +167,16 @@ public class TypeCheckingVisitor extends AbstractVisitor<Void, Type> {
         return null;
     }
 
+    @Override
+    public Void visit(IncDec incDec, Type param) {
+        super.visit(incDec, param);
+
+        incDec.getTarget().getType().mustBeBuiltIn(incDec);
+        incDec.getTarget().getType().arithmetic(incDec);
+
+        return null;
+    }
+
     // ---------------------------------------------------
     // Definiciones
 

@@ -1,28 +1,33 @@
-let c: char;
-let i: int;
-let r: number;
+let x: int;
+let y:number;
+let c:char;
+
+let v: [5]int;
 
 function main(): void{
-	let a, i:int;
-	
-	c = 'a';
-	log c,'\n';
 
-	a = (1.5 as int);
-	i = '0' * 3;
-	log a, ' ', i, '\n';
-		
-	input r;
-	log 2 * r, '\n';
-	
-	log 3 - 4.5, ' ', 
-            '0' / 48.0, ' ',
-            '0' % '1', ' ',
-            0 + '1', '\n';
-	log 1 < 2, ' ',
-	      4 >= 3, ' ',
-	      5 == 5, ' ',
-	      1 && 2, ' ',
-	      0 || 3, ' ',
-	      !0, '\n';
+    x = 1;
+    y = 2.5;
+    c = 'a';
+
+    x++;
+    x++;
+    x--;
+
+    y++;
+    y++;
+    y--;
+
+    c++;
+    c++;
+    c--;
+
+    log x;
+    log y;
+    log c;
+
+    v[0] = 10;
+    v[0]++;
+    log v[0];
+
 }

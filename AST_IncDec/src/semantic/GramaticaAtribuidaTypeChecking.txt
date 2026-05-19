@@ -26,6 +26,7 @@ G:
     (18) While: stmt1 -> expr stmt2*
     (19) IfElse: stmt1 -> expr stmt2* stmt3*
     (20) FuncCall: stmt -> expr1 expr2*
+    (32) IncDec: stmt -> expr (++|--)
 
     // Definiciones
     (21) FuncDef: def -> ID type stmt*
@@ -110,3 +111,7 @@ R:
         Type returnType = ((FuncType) type).getReturnType();
         for (Stmt s : stmt*)
             // visit(s, returnType);
+
+    (32) // IncDec
+        expr.type.mustBeBuiltIn(stmt);
+        expr.type.arithmetic(stmt);
