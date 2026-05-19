@@ -1,0 +1,132 @@
+Paso a paso del For con ámbitos
+
+1. Añadir clase For al AST
+  - Debe guardar: Inicialización, Condición, Incremento y Cuerpo del bucle
+  - La inicialización se guarda como Statement para poder aceptar dos casos:
+    1. Asignación normal:
+       i=0
+    2. Declaración de variable con inicialización:
+       let i: int = 0
+  - Recordar modificar el método accept
+
+2. Modificar VarDef
+  - Se reutiliza para usar una declaración como inicialización del bucle
+  - Se añade un atributo initialValue de tipo Expression para este caso
+    let i: int = 0
+  - Métodos correspondientes: hasInitialValue(), getInitialValue() y setInitialValue()
+  - De esta forma, VarDef puede representar:
+    1. Declaraciones normales:
+       let i : int
+    2. Declaraciones inicializadas para el bucle for:
+       let i : int = 0
+
+3. Añadir visitos al Visitor, AbstractVisitor y AbstractCGVisitor
+  - Se añade el metodo visit para el nodo For
+  - Se modifica el método visit de VarDef para que, si tiene inicialización, se visite también la expresión inicial
+
+4. Regla en ANTRL en TSmm.g4
+  - Regla del for dentro de stmt
+  - Reglas auxiliares:
+    -> initializationFor
+    -> assignemntFor
+    -> varDefFor
+  - Así permitimos:
+    -> for (i=0; i<5; i=i+1) ...
+    -> for (let i: int = 0; i<5; i=i+1) ...
+
+5. Fase LValue -> Nada
+
+6. Fase Identification
+  - Se necesita abrir un nuevo ámbito para poder declarar una variable local propia
+  - Esa variable solo puede ser visible desde dentro del propio for: Inicialización, Condición, Incremento y Cuerpo
+  - Nuevo visit(For) en IdentificationVisitor
+    -> Se abre nuevo ámbito
+    -> Se visita el propio nodo hacia arriba
+    -> Se cierra el ámbito
+
+7. Fase TypeChecking
+  - Se añade comprobación para el bucle For
+    -> Comprobar que la condición es booleana (int)
+  - Modificar visit(VarDef)
+    -> Si VarDef tiene initialValue:
+        -> Primero visitar expresión inicial para calcular su tipo
+        -> Después comprobar que el tipo de la expresión puede promocionar al tipo de la variable
+
+8. Fase Offset
+  - La variable declarada en la inicialización del for necesita offset local
+    -> Aunque su ámbito sea el del for, su memoria se reserva en el marco de activación de la función
+  - visit(For)
+    -> Visitar la inicialización con contexto local
+    -> Visitar el el cuerpo del for para encontrar declaraciones de variables internas
+
+9. Plantillas de código
+  - Igual que en For facil
+
+10. ExecuteCGVisitor para For
+  - Igual que en For fácil
+
+11. Modificar ExecuteCGVisitor de VarDef -> Ahora permite inicialización
+  - Si VarDef tiene initialValue, debe generar:
+    -> Declaración
+    -> Metodo auxiliar para obtener la dirección de un VarDef
+      -> Si scope == 0: Dirección global
+      -> Si scope > 0: BP + offset
+
+------------------------------------------------------------------------------------
+EJEMPLOS VÁLIDOS
+
+- For fácil, con variable previamente declarada:
+    let i: int;
+
+    function main(): void {
+        for (i = 0; i < 5; i = i + 1) {
+            log i;
+        }
+    }
+
+- For difícil, con variable declarada en la inicialización:
+    function main(): void {
+        for (let i: int = 0; i < 5; i = i + 1) {
+            log i;
+        }
+    }
+
+- For anidado:
+    function main(): void {
+        for (let i: int = 0; i < 3; i = i + 1) {
+            for (let j: int = 0; j < 2; j = j + 1) {
+                log i;
+                log j;
+            }
+        }
+    }
+
+- Sombreado de variables:
+    function main(): void {
+        let i: int;
+
+        for (let i: int = 0; i < 5; i = i + 1) {
+            log i;
+        }
+
+        log i;
+    }
+
+------------------------------------------------------------------------------------
+EJEMPLOS INVÁLIDOS
+
+- Usar fuera del for una variable declarada dentro del for:
+    function main(): void {
+        for (let i: int = 0; i < 5; i = i + 1) {
+            log i;
+        }
+
+        log i; // Error
+    }
+
+- Inicialización con tipo incompatible:
+    function main(): void {
+        for (let i: int = 2.5; i < 5; i = i + 1) { // Error
+            log i;
+        }
+    }

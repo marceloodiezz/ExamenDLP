@@ -11,56 +11,29 @@ halt
 main:
 	' * Parameters:
 	' * Local Variables:
+	' * int i (offset -2)
 	enter	4
 
-#line	3
+#line	4
 	' * For
-	' * int i (offset -2)
+	' * int i (offset -4)
 
-#line	3
+#line	4
 	' * VarDef initialization
 	pusha	bp
-	pushi	-2
+	pushi	-4
 	addi
 	pushi	0
 	storei
  label0:
 	pusha	bp
-	pushi	-2
+	pushi	-4
 	addi
 	loadi
-	pushi	2
+	pushi	5
 	lti
 	jz	label1
 
-#line	4
-	' * For
-	' * int j (offset -4)
-
-#line	4
-	' * VarDef initialization
-	pusha	bp
-	pushi	-4
-	addi
-	pushi	0
-	storei
- label2:
-	pusha	bp
-	pushi	-4
-	addi
-	loadi
-	pushi	3
-	lti
-	jz	label3
-
-#line	5
-	' * Write
-	pusha	bp
-	pushi	-2
-	addi
-	loadi
-	outi
-
 #line	5
 	' * Write
 	pusha	bp
@@ -76,21 +49,6 @@ main:
 	addi
 	pusha	bp
 	pushi	-4
-	addi
-	loadi
-	pushi	1
-	addi
-	storei
-	jmp	label2
- label3:
-
-#line	3
-	' * Assignment
-	pusha	bp
-	pushi	-2
-	addi
-	pusha	bp
-	pushi	-2
 	addi
 	loadi
 	pushi	1
@@ -98,4 +56,12 @@ main:
 	storei
 	jmp	label0
  label1:
+
+#line	8
+	' * Write
+	pusha	bp
+	pushi	-2
+	addi
+	loadi
+	outi
 	ret	0, 4, 0
