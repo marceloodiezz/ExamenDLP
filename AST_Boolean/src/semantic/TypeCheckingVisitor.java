@@ -97,10 +97,36 @@ public class TypeCheckingVisitor extends AbstractVisitor<Void, Type> {
         return null;
     }
 
+    /**
+     * true == false   válido
+     * true != false   válido
+     * true < false    inválido
+     * true > false    inválido
+     * x < 3           válido si x es numérico
+     */
     @Override
     public Void visit(ComparisonOp c, Type param) {
         super.visit(c, param);
-        c.setType(c.getLeft().getType().comparison(c.getRight().getType(), c));
+
+        Type leftType = c.getLeft().getType();
+        Type rightType = c.getRight().getType();
+
+        if (leftType == BooleanType.getInstance() || rightType == BooleanType.getInstance()) {
+            if (leftType == BooleanType.getInstance()
+                    && rightType == BooleanType.getInstance()
+                    && (c.getOperator().equals("==") || c.getOperator().equals("!="))) {
+                c.setType(BooleanType.getInstance());
+            }
+            else {
+                c.setType(new ErrorType(
+                        "Solo se pueden comparar booleanos con los operadores == y !=.",
+                        c
+                ));
+            }
+        }
+        else {
+            c.setType(leftType.comparison(rightType, c));
+        }
 
         return null;
     }
@@ -178,6 +204,15 @@ public class TypeCheckingVisitor extends AbstractVisitor<Void, Type> {
 
         for (Statement stmt : f.getBody())
             stmt.accept(this, returnType);
+
+        return null;
+    }
+
+
+
+    @Override
+    public Void visit(BooleanLiteral b, Type param) {
+        b.setType(BooleanType.getInstance());
 
         return null;
     }

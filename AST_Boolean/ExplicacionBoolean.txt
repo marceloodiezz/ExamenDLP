@@ -1,0 +1,554 @@
+IMPLEMENTACIÓN DEL TIPO BOOLEAN
+
+En esta extensión se ha añadido soporte para el tipo boolean al lenguaje, partiendo del proyecto base. Hasta ahora, el compilador utilizaba el tipo int como valor lógico, es decir, las condiciones de if, while y los operadores lógicos trabajaban internamente con enteros. Con esta modificación se introduce un tipo boolean real, con sus propios literales true y false, y se ajusta el sistema de tipos para que las expresiones lógicas devuelvan boolean en lugar de int.
+
+============================================================
+1. NUEVA GRAMÁTICA ABSTRACTA
+============================================================
+
+Se han añadido dos nuevas construcciones a la gramática abstracta:
+
+    BooleanType: type -> BOOLEAN
+    BooleanLiteral: expr -> TRUE | FALSE
+
+BooleanType representa el nuevo tipo lógico del lenguaje.
+BooleanLiteral representa los valores constantes true y false.
+
+Aunque a nivel del lenguaje fuente boolean es un tipo distinto de int, internamente en MAPL se representa como un entero de 2 bytes:
+
+    false -> 0
+    true  -> 1
+
+Esto permite reutilizar las instrucciones existentes de MAPL, como pushi, loadi, storei, and, or, not, jz y jnz.
+
+============================================================
+2. CAMBIOS EN EL AST
+============================================================
+
+Se ha añadido la clase:
+
+    ast/type/BooleanType.java
+
+Esta clase representa el nuevo tipo boolean. Sigue el mismo patrón que IntType, CharType o NumberType, usando una instancia única mediante getInstance().
+
+Sus responsabilidades principales son:
+
+    - Representar el tipo boolean.
+    - Indicar que ocupa 2 bytes en memoria.
+    - Usar el sufijo 'i' para la generación de código MAPL.
+    - Permitir operaciones lógicas entre booleanos.
+    - Permitir el operador unario ! sobre booleanos.
+    - Permitir comparaciones booleanas de igualdad y desigualdad.
+    - Impedir promociones automáticas entre boolean e int, char o number.
+
+También se ha añadido la clase:
+
+    ast/expression/BooleanLiteral.java
+
+Esta clase representa los literales true y false. Almacena internamente un valor boolean y proporciona un método auxiliar para obtener su representación entera:
+
+    true  -> 1
+    false -> 0
+
+Este valor entero se utiliza después en la generación de código.
+
+============================================================
+3. CAMBIOS EN LA GRAMÁTICA TSmm.g4
+============================================================
+
+Se ha modificado la gramática concreta para reconocer el nuevo tipo boolean.
+
+En la regla de tipos simples se ha añadido:
+
+    'boolean' { $ast = BooleanType.getInstance(); }
+
+De esta forma, ahora se pueden declarar variables, parámetros y tipos de retorno booleanos:
+
+    let ok: boolean;
+
+    function esValido(): boolean {
+        return true;
+    }
+
+También se han añadido los literales true y false como expresiones válidas:
+
+    true
+    false
+
+Para ello se han añadido tokens léxicos:
+
+    TRUE: 'true';
+    FALSE: 'false';
+
+Estos tokens se colocan antes de ID para evitar que true y false sean reconocidos como identificadores normales.
+
+Después de modificar la gramática, se regenera ANTLR para actualizar los ficheros generados del parser y del lexer.
+
+============================================================
+4. CAMBIOS EN VISITOR Y ABSTRACTVISITOR
+============================================================
+
+Se ha actualizado la interfaz Visitor para añadir visitas a los nuevos nodos:
+
+    visit(BooleanType, ...)
+    visit(BooleanLiteral, ...)
+
+También se ha actualizado AbstractVisitor añadiendo implementaciones por defecto para ambos nodos.
+
+Como BooleanType y BooleanLiteral no tienen hijos, sus métodos por defecto simplemente devuelven null.
+
+Esto permite que todos los visitantes del compilador puedan reconocer los nuevos nodos sin romper la estructura existente.
+
+============================================================
+5. CAMBIOS EN EL SISTEMA DE TIPOS
+============================================================
+
+El cambio más importante de la extensión está en el sistema de tipos.
+
+Antes, el tipo int actuaba también como tipo lógico. Por ejemplo:
+
+    if (x) { ... }
+
+era válido si x era int.
+
+Con la nueva extensión, esto deja de estar permitido. A partir de ahora, las condiciones deben ser de tipo boolean.
+
+Por tanto, se han modificado los tipos existentes:
+
+------------------------------------------------------------
+IntType
+------------------------------------------------------------
+
+Antes, IntType permitía operaciones lógicas y podía usarse como condición.
+
+Ahora:
+
+    - int ya no es lógico.
+    - int no puede usarse directamente en if o while.
+    - las comparaciones entre int, char y number devuelven boolean.
+
+Ejemplo:
+
+    a < b
+
+si a y b son enteros, ahora devuelve boolean, no int.
+
+------------------------------------------------------------
+CharType
+------------------------------------------------------------
+
+Se elimina el comportamiento lógico de char.
+
+Ahora:
+
+    - char no puede usarse como condición.
+    - char no puede usarse con &&, || o !.
+    - las comparaciones válidas con char devuelven boolean.
+
+------------------------------------------------------------
+NumberType
+------------------------------------------------------------
+
+Se actualiza la comparación para que devuelva boolean.
+
+Ejemplo:
+
+    x >= 3.5
+
+devuelve boolean.
+
+------------------------------------------------------------
+BooleanType
+------------------------------------------------------------
+
+Se añade el comportamiento específico del nuevo tipo:
+
+    - boolean && boolean -> boolean
+    - boolean || boolean -> boolean
+    - !boolean -> boolean
+    - boolean == boolean -> boolean
+    - boolean != boolean -> boolean
+
+No se permite mezclar boolean con int, char o number.
+
+Ejemplos inválidos:
+
+    true + 1
+    true < false
+    ok = 1
+    x = false
+
+============================================================
+6. CAMBIOS EN TYPECHECKINGVISITOR
+============================================================
+
+Se ha actualizado la fase de comprobación de tipos para trabajar con el nuevo tipo boolean.
+
+------------------------------------------------------------
+BooleanLiteral
+------------------------------------------------------------
+
+Se añade el visit correspondiente:
+
+    BooleanLiteral.type = BooleanType
+
+Es decir:
+
+    true  tiene tipo boolean
+    false tiene tipo boolean
+
+------------------------------------------------------------
+Operadores lógicos
+------------------------------------------------------------
+
+Los operadores && y || ahora exigen operandos booleanos y devuelven boolean.
+
+Ejemplo válido:
+
+    true && false
+
+Ejemplo inválido:
+
+    1 && 2
+
+------------------------------------------------------------
+Operador !
+------------------------------------------------------------
+
+El operador unario ! ahora solo se puede aplicar sobre boolean.
+
+Ejemplo válido:
+
+    !ok
+
+Ejemplo inválido:
+
+    !x
+
+si x es int.
+
+------------------------------------------------------------
+Comparaciones
+------------------------------------------------------------
+
+Las comparaciones numéricas siguen siendo válidas:
+
+    3 < 5
+    a >= b
+    x == y
+
+pero ahora devuelven boolean.
+
+Además, se permite comparar booleanos únicamente con == y !=:
+
+    true == false
+    ok != true
+
+No se permite usar operadores de orden con booleanos:
+
+    true < false
+    ok >= false
+
+------------------------------------------------------------
+Condiciones de if y while
+------------------------------------------------------------
+
+Las condiciones de if y while ahora deben ser booleanas.
+
+Ejemplo válido:
+
+    if (x < 10) {
+        log x;
+    }
+
+Ejemplo válido:
+
+    while (ok) {
+        log 1;
+    }
+
+Ejemplo inválido:
+
+    if (x) {
+        log x;
+    }
+
+si x es int.
+
+============================================================
+7. CAMBIOS EN GENERACIÓN DE CÓDIGO
+============================================================
+
+Aunque boolean es un tipo nuevo en el lenguaje fuente, en MAPL se representa como un entero de 2 bytes.
+
+Por tanto:
+
+    true  genera pushi 1
+    false genera pushi 0
+
+Se ha añadido la generación de código para BooleanLiteral en ValueCGVisitor.
+
+Ejemplo:
+
+    ok = true;
+
+genera conceptualmente:
+
+    pusha offset_ok
+    pushi 1
+    storei
+
+También se actualizan los operadores lógicos para trabajar con BooleanType:
+
+    && -> and
+    || -> or
+    !  -> not
+
+Como BooleanType usa sufijo 'i', las cargas y almacenamientos usan:
+
+    loadi
+    storei
+
+Y las comparaciones booleanas de igualdad/desigualdad usan:
+
+    eqi
+    nei
+
+============================================================
+8. CAMBIOS EN CODEGENERATOR
+============================================================
+
+Se ha actualizado el método encargado de calcular el tipo común de comparación.
+
+Antes, las comparaciones devolvían y trabajaban generalmente con IntType.
+
+Ahora:
+
+    - si se comparan booleanos, el tipo de comparación es BooleanType.
+    - si aparece number, el tipo de comparación es NumberType.
+    - en el resto de comparaciones numéricas, se usa IntType como tipo de comparación interno.
+
+La expresión de comparación resultante, sin embargo, tiene tipo boolean.
+
+Ejemplo:
+
+    a < b
+
+puede comparar internamente como enteros, pero el resultado final de la expresión es boolean.
+
+============================================================
+9. CAMBIOS EN EXECUTECGVISITOR
+============================================================
+
+Se han actualizado las estructuras de control if y while.
+
+Antes, sus condiciones se convertían a IntType antes de generar el salto condicional.
+
+Ahora, se convierten a BooleanType:
+
+    value[[condicion]]
+    convertTo(condicion.type, BooleanType)
+    jz etiqueta
+
+Esto mantiene la misma representación MAPL, pero conceptualmente el compilador ya trabaja con condiciones booleanas reales.
+
+============================================================
+10. OFFSETVISITOR
+============================================================
+
+No es necesario modificar OffsetVisitor.
+
+BooleanType implementa numberOfBytes() devolviendo 2, por lo que las variables booleanas ocupan 2 bytes, igual que los enteros.
+
+Ejemplo:
+
+    let x: int;
+    let ok: boolean;
+    let c: char;
+
+Offsets globales aproximados:
+
+    x  -> offset 0, tamaño 2
+    ok -> offset 2, tamaño 2
+    c  -> offset 4, tamaño 1
+
+============================================================
+11. INPUT Y LOG
+============================================================
+
+No es necesario modificar input ni log.
+
+Como BooleanType usa sufijo 'i', se pueden leer y escribir booleanos como enteros:
+
+    input ok;
+    log ok;
+
+A nivel de ejecución:
+
+    false se muestra como 0
+    true se muestra como 1
+
+Imprimir literalmente "true" o "false" requeriría una extensión adicional.
+
+============================================================
+12. EJEMPLOS VÁLIDOS
+============================================================
+
+Ejemplo 1: uso básico de boolean
+
+    let ok: boolean;
+
+    function main(): void {
+        ok = true;
+
+        if (ok) {
+            log 1;
+        }
+        else {
+            log 0;
+        }
+    }
+
+Ejemplo 2: una comparación devuelve boolean
+
+    let a: int;
+    let b: int;
+    let ok: boolean;
+
+    function main(): void {
+        a = 3;
+        b = 5;
+
+        ok = a < b;
+
+        if (ok) {
+            log 1;
+        }
+    }
+
+Ejemplo 3: operadores lógicos
+
+    let a: int;
+    let b: int;
+    let ok: boolean;
+
+    function main(): void {
+        a = 3;
+        b = 5;
+
+        ok = (a < b) && true;
+
+        if (!ok) {
+            log 0;
+        }
+        else {
+            log 1;
+        }
+    }
+
+Ejemplo 4: función que devuelve boolean
+
+    function esMenor(a: int, b: int): boolean {
+        return a < b;
+    }
+
+    function main(): void {
+        if (esMenor(2, 5)) {
+            log 1;
+        }
+    }
+
+============================================================
+13. EJEMPLOS INVÁLIDOS
+============================================================
+
+Ejemplo 1: usar int como condición
+
+    let x: int;
+
+    function main(): void {
+        x = 1;
+
+        if (x) {
+            log x;
+        }
+    }
+
+Error: la condición del if debe ser boolean.
+
+------------------------------------------------------------
+
+Ejemplo 2: asignar int a boolean
+
+    let ok: boolean;
+
+    function main(): void {
+        ok = 1;
+    }
+
+Error: int no promociona a boolean.
+
+------------------------------------------------------------
+
+Ejemplo 3: asignar boolean a int
+
+    let x: int;
+
+    function main(): void {
+        x = true;
+    }
+
+Error: boolean no promociona a int.
+
+------------------------------------------------------------
+
+Ejemplo 4: operación aritmética con boolean
+
+    let ok: boolean;
+    let x: int;
+
+    function main(): void {
+        ok = true;
+        x = ok + 1;
+    }
+
+Error: no se puede aplicar + entre boolean e int.
+
+------------------------------------------------------------
+
+Ejemplo 5: comparación booleana inválida
+
+    let a: boolean;
+    let b: boolean;
+
+    function main(): void {
+        a = true;
+        b = false;
+
+        if (a < b) {
+            log 1;
+        }
+    }
+
+Error: los booleanos solo se pueden comparar con == y !=.
+
+============================================================
+14. RESUMEN FINAL
+============================================================
+
+Con esta extensión, el lenguaje deja de usar int como tipo lógico y pasa a tener un tipo boolean real.
+
+Los principales cambios son:
+
+    - Se añade BooleanType.
+    - Se añade BooleanLiteral.
+    - Se reconocen las palabras reservadas boolean, true y false.
+    - Las comparaciones devuelven boolean.
+    - Los operadores &&, || y ! trabajan únicamente con boolean.
+    - Las condiciones de if y while deben ser boolean.
+    - int y char dejan de poder usarse como condiciones.
+    - boolean se representa internamente en MAPL como un entero de 2 bytes.
+    - true se genera como pushi 1.
+    - false se genera como pushi 0.
+
+La representación interna sigue siendo compatible con MAPL, pero semánticamente el lenguaje queda más limpio y más parecido a lenguajes modernos como Java o C#.

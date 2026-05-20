@@ -111,6 +111,8 @@ simple_type returns [Type ast] :
            | 'number' { $ast = NumberType.getInstance(); }
            // CharType
            | 'char' { $ast = CharType.getInstance(); }
+           // BooleanType
+           | 'boolean' { $ast = BooleanType.getInstance(); }
            ;
 
 type returns [Type ast] locals [List<RecordField> recordFields = new ArrayList<>()] :
@@ -289,6 +291,16 @@ expression returns [Expression ast] locals [List<Expression> args = new ArrayLis
               { $ast = new CharLiteral(LexerHelper.lexemeToChar($CHAR_CONSTANT.getText()),
                                        $CHAR_CONSTANT.getLine(),
                                        $CHAR_CONSTANT.getCharPositionInLine()+1); }
+          // BooleanLiteral true
+          | TRUE
+              { $ast = new BooleanLiteral(true,
+                                          $TRUE.getLine(),
+                                          $TRUE.getCharPositionInLine()+1); }
+          // BooleanLiteral false
+          | FALSE
+              { $ast = new BooleanLiteral(false,
+                                          $FALSE.getLine(),
+                                          $FALSE.getCharPositionInLine()+1); }
           // Variable
           | ID
               { $ast = new Variable($ID.getText(),
@@ -335,6 +347,12 @@ INT_CONSTANT: [1-9] DIGIT*
 
 CHAR_CONSTANT: '\'' (ESCAPED_CHAR | ~['\\\r\n]) '\''
              ;
+
+TRUE: 'true'
+    ;
+
+FALSE: 'false'
+     ;
 
 ID: LETTER (LETTER | DIGIT | '_')*
   | '_' (LETTER | DIGIT | '_')*

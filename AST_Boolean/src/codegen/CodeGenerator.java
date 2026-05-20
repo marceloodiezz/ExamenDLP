@@ -1,9 +1,6 @@
 package codegen;
 
-import ast.type.CharType;
-import ast.type.IntType;
-import ast.type.NumberType;
-import ast.type.Type;
+import ast.type.*;
 
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -145,8 +142,12 @@ public class CodeGenerator {
     }
 
     public Type comparisonType(Type left, Type right) {
+        if (left.equals(BooleanType.getInstance()) && right.equals(BooleanType.getInstance()))
+            return BooleanType.getInstance();
+
         if (left.equals(NumberType.getInstance()) || right.equals(NumberType.getInstance()))
             return NumberType.getInstance();
+
         return IntType.getInstance();
     }
 

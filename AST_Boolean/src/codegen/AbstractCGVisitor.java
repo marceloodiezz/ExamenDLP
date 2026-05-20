@@ -173,4 +173,15 @@ public abstract class AbstractCGVisitor<RT, PT> implements Visitor<RT, PT> {
     public RT visit(VoidType voidType, PT param) {
         throw new IllegalStateException("Generación de código no implementada para el nodo: " + voidType);
     }
+
+
+    @Override
+    public RT visit(BooleanLiteral booleanLiteral, PT param) {
+        throw new IllegalStateException("Generación de código no implementada para el nodo: " + booleanLiteral);
+    }
+
+    @Override
+    public RT visit(BooleanType booleanType, PT param) {
+        throw new IllegalStateException("Generación de código no implementada para el nodo: " + booleanType);
+    }
 }

@@ -62,13 +62,13 @@ public class ValueCGVisitor extends AbstractCGVisitor<Void,Void> {
     /**
      * value[[UnaryNot: expr1 -> expr2]]()=
      *     value[[expr2]]()
-     *     cg.convertTo(expr2.type, IntType)
+     *     cg.convertTo(expr2.type, BooleanType)
      *     <not>
      */
     @Override
     public Void visit(UnaryNot u, Void param){
         u.getOperand().accept(this, null);
-        getCodeGenerator().convertTo(u.getOperand().getType(), IntType.getInstance());
+        getCodeGenerator().convertTo(u.getOperand().getType(), BooleanType.getInstance());
         getCodeGenerator().not();
         return null;
     }
@@ -148,18 +148,21 @@ public class ValueCGVisitor extends AbstractCGVisitor<Void,Void> {
     /**
      * value[[ LogicOp: expr1 -> expr2 OP expr3 ]]() =
      *     value[[expr2]]()
-     *     cg.convertTo(expr2.type, IntType)
+     *     cg.convertTo(expr2.type, BooleanType)
      *     value[[expr3]]()
-     *     cg.convertTo(expr3.type, IntType)
+     *     cg.convertTo(expr3.type, BooleanType)
      *     cg.logic(expr1.operator, expr1.type)
      */
     @Override
     public Void visit(LogicOp l, Void param){
         l.getLeft().accept(this, null);
-        getCodeGenerator().convertTo(l.getLeft().getType(), IntType.getInstance());
+        getCodeGenerator().convertTo(l.getLeft().getType(), BooleanType.getInstance());
+
         l.getRight().accept(this, null);
-        getCodeGenerator().convertTo(l.getRight().getType(), IntType.getInstance());
-        getCodeGenerator().logic(l.getOperator(), IntType.getInstance());
+        getCodeGenerator().convertTo(l.getRight().getType(), BooleanType.getInstance());
+
+        getCodeGenerator().logic(l.getOperator(), BooleanType.getInstance());
+
         return null;
     }
 
@@ -198,6 +201,21 @@ public class ValueCGVisitor extends AbstractCGVisitor<Void,Void> {
             getCodeGenerator().convertTo(f.getArgs().get(i).getType(), ((FuncType)(f.getVariable().getType())).getParams().get(i).getType());
         }
         getCodeGenerator().call(f.getVariable().getName());
+        return null;
+    }
+
+
+
+    /**
+     * value[[ BooleanLiteral: expr -> BOOL_CONST ]]() =
+     *     if expr.value
+     *         <pushi> 1
+     *     else
+     *         <pushi> 0
+     */
+    @Override
+    public Void visit(BooleanLiteral b, Void param) {
+        getCodeGenerator().pushi(b.getIntValue());
         return null;
     }
 

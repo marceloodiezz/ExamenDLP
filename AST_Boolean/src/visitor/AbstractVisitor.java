@@ -223,4 +223,16 @@ public abstract class AbstractVisitor<RT, PT> implements Visitor<RT, PT> {
         return null;
     }
 
+
+
+    @Override
+    public RT visit(BooleanLiteral booleanLiteral, PT param) {
+        return null;
+    }
+
+    @Override
+    public RT visit(BooleanType booleanType, PT param) {
+        return null;
+    }
+
 }

@@ -98,7 +98,7 @@ public class ExecuteCGVisitor extends AbstractCGVisitor<Void, FuncDef> {
      *     String end = cg.getLabel()
      *     cond <:>
      *     value[[expr]]()
-     *     cg.convertTo(expr.type, IntType)
+     *     cg.convertTo(expr.type, BooleanType)
      *     <jz> end
      *     stmt2*.forEach(s -> execute[[s]]())
      *     <jmp> cond
@@ -112,7 +112,7 @@ public class ExecuteCGVisitor extends AbstractCGVisitor<Void, FuncDef> {
         getCodeGenerator().comment("While");
         getCodeGenerator().label(cond);
         w.getCondition().accept(valueCGVisitor, null);
-        getCodeGenerator().convertTo(w.getCondition().getType(), IntType.getInstance());
+        getCodeGenerator().convertTo(w.getCondition().getType(), BooleanType.getInstance());
         getCodeGenerator().jz(end);
         getCodeGenerator().comment("While body");
         for (Statement st : w.getBody())
@@ -128,7 +128,7 @@ public class ExecuteCGVisitor extends AbstractCGVisitor<Void, FuncDef> {
      *     String else = cg.getLabel()
      *     String end = cg.getLabel()
      *     value[[expr]]()
-     *     cg.convertTo(expr.type, IntType)
+     *     cg.convertTo(expr.type, BooleanType)
      *     <jz> else
      *     stmt2*.forEach(s -> execute[[s]]())
      *     <jump> end
@@ -143,7 +143,7 @@ public class ExecuteCGVisitor extends AbstractCGVisitor<Void, FuncDef> {
         getCodeGenerator().commentLine(ie.getLine());
         getCodeGenerator().comment("If");
         ie.getCondition().accept(valueCGVisitor, null);
-        getCodeGenerator().convertTo(ie.getCondition().getType(), IntType.getInstance());
+        getCodeGenerator().convertTo(ie.getCondition().getType(), BooleanType.getInstance());
         getCodeGenerator().jz(elseLabel);
         getCodeGenerator().comment("if body");
         for (Statement st : ie.getIf_body())

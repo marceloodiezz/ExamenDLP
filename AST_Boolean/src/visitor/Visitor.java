@@ -25,6 +25,7 @@ public interface Visitor<RT, PT> {
     RT visit(UnaryMinus unaryMinus, PT param);
     RT visit(UnaryNot unaryNot, PT param);
     RT visit(Variable variable, PT param);
+    RT visit(BooleanLiteral booleanLiteral, PT param);
 
     // Programa
     RT visit(Program program, PT param);
@@ -48,5 +49,6 @@ public interface Visitor<RT, PT> {
     RT visit(RecordField recordField, PT param);
     RT visit(RecordType recordType, PT param);
     RT visit(VoidType voidType, PT param);
+    RT visit(BooleanType booleanType, PT param);
 
 }

@@ -27,17 +27,20 @@ public class CharType extends AbstractType {
         return super.arithmetic(other, l);
     }
 
+    /*
     @Override
     public Type logic(Type other, Locatable l) {
         if(other == IntType.getInstance() || other == CharType.getInstance())
             return IntType.getInstance();
         return super.logic(other, l);
     }
+     */
 
     @Override
     public Type comparison(Type other, Locatable l) {
         if(other == IntType.getInstance() || other == CharType.getInstance() || other == NumberType.getInstance())
-            return IntType.getInstance();
+            return BooleanType.getInstance();
+
         return super.comparison(other, l);
     }
 
@@ -46,10 +49,12 @@ public class CharType extends AbstractType {
         return IntType.getInstance();
     }
 
+    /*
     @Override
     public Type logic(Locatable l) {
         return IntType.getInstance();
     }
+     */
 
     @Override
     public Type canBeCastTo(Type t, Locatable l) {

@@ -204,3 +204,12 @@ value[[ FuncCall: expr1 -> expr2 expr3* ]]() =
         cg.convertTo(expr3*.get(i).type, expr2.type.params.get(i).type)
     }
     <call> (expr2.name)
+
+
+
+
+value[[ BooleanLiteral: expr -> BOOL_CONST ]]() =
+    if expr.value == true
+        <pushi> 1
+    else
+        <pushi> 0
