@@ -253,4 +253,62 @@ public class ExecuteCGVisitor extends AbstractCGVisitor<Void, FuncDef> {
         return null;
     }
 
+    /**
+     * execute[[ Switch: stmt1 -> expr switchCase* stmt2* ]]() =
+     *     String end = cg.getLabel()
+     *     for (SwitchCase c : switchCase*) {
+     *         String next = cg.getLabel()
+     *         value[[expr]]()
+     *         cg.convertTo(expr.type, comparisonType(expr.type, c.value.type))
+     *         value[[c.value]]()
+     *         cg.convertTo(c.value.type, comparisonType(expr.type, c.value.type))
+     *         <eq> comparisonType(expr.type, c.value.type)
+     *         <jz> next
+     *         c.body.forEach(s -> execute[[s]]())
+     *         <jmp> end
+     *         next <:>
+     *     }
+     *     stmt2*.forEach(s -> execute[[s]]())
+     *     end <:>
+     */
+    @Override
+    public Void visit(Switch switchStmt, FuncDef param) {
+        String endLabel = getCodeGenerator().getLabel();
+
+        getCodeGenerator().commentLine(switchStmt.getLine());
+        getCodeGenerator().comment("Switch");
+
+        for (SwitchCase switchCase : switchStmt.getCases()) {
+            String nextCaseLabel = getCodeGenerator().getLabel();
+
+            getCodeGenerator().comment("Case");
+
+            Type comparisonType = getCodeGenerator().comparisonType(switchStmt.getCondition().getType(), switchCase.getValue().getType());
+
+            switchStmt.getCondition().accept(valueCGVisitor, null);
+            getCodeGenerator().convertTo(switchStmt.getCondition().getType(), comparisonType);
+
+            switchCase.getValue().accept(valueCGVisitor, null);
+            getCodeGenerator().convertTo(switchCase.getValue().getType(), comparisonType);
+
+            getCodeGenerator().eq(comparisonType);
+            getCodeGenerator().jz(nextCaseLabel);
+
+            for (Statement stmt : switchCase.getBody())
+                stmt.accept(this, param);
+
+            getCodeGenerator().jmp(endLabel);
+            getCodeGenerator().label(nextCaseLabel);
+        }
+
+        getCodeGenerator().comment("Default");
+
+        for (Statement stmt : switchStmt.getDefaultBody())
+            stmt.accept(this, param);
+
+        getCodeGenerator().label(endLabel);
+
+        return null;
+    }
+
 }

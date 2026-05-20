@@ -182,4 +182,24 @@ public class TypeCheckingVisitor extends AbstractVisitor<Void, Type> {
         return null;
     }
 
+
+
+    @Override
+    public Void visit(Switch switchStmt, Type param) {
+        super.visit(switchStmt, param);
+
+        switchStmt.getCondition().getType().mustBeBuiltIn(switchStmt);
+
+        for (SwitchCase switchCase : switchStmt.getCases())
+            switchStmt.getCondition().getType().comparison(switchCase.getValue().getType(), switchCase);
+
+        return null;
+    }
+
+    @Override
+    public Void visit(SwitchCase switchCase, Type param) {
+        super.visit(switchCase, param);
+        return null;
+    }
+
 }

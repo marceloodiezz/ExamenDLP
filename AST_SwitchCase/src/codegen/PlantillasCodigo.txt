@@ -204,3 +204,23 @@ value[[ FuncCall: expr1 -> expr2 expr3* ]]() =
         cg.convertTo(expr3*.get(i).type, expr2.type.params.get(i).type)
     }
     <call> (expr2.name)
+
+
+
+// Switch
+execute[[ Switch: stmt1 -> expr switchCase* stmt2* ]]() =
+    String end = cg.getLabel()
+    for (SwitchCase c : switchCase*) {
+        String next = cg.getLabel()
+        value[[expr]]()
+        cg.convertTo(expr.type, comparisonType(expr.type, c.value.type))
+        value[[c.value]]()
+        cg.convertTo(c.value.type, comparisonType(expr.type, c.value.type))
+        <eq> comparisonType(expr.type, c.value.type)
+        <jz> next
+        c.body.forEach(s -> execute[[s]]())
+        <jmp> end
+        next <:>
+    }
+    stmt2*.forEach(s -> execute[[s]]())
+    end <:>

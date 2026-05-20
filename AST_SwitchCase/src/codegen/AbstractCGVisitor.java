@@ -173,4 +173,17 @@ public abstract class AbstractCGVisitor<RT, PT> implements Visitor<RT, PT> {
     public RT visit(VoidType voidType, PT param) {
         throw new IllegalStateException("Generación de código no implementada para el nodo: " + voidType);
     }
+
+
+    // Ejercicio SwitchCase
+
+    @Override
+    public RT visit(Switch s, PT param) {
+        throw new IllegalStateException("Generación de código no implementada para el nodo: " + s);
+    }
+
+    @Override
+    public RT visit(SwitchCase sc, PT param) {
+        throw new IllegalStateException("Generación de código no implementada para el nodo: " + sc);
+    }
 }

@@ -223,4 +223,31 @@ public abstract class AbstractVisitor<RT, PT> implements Visitor<RT, PT> {
         return null;
     }
 
+
+    // ---------------------------------------------------
+    // Ejercicio SwitchCase
+
+    @Override
+    public RT visit(Switch s, PT param) {
+        s.getCondition().accept(this, param);
+
+        for (SwitchCase sc : s.getCases())
+            sc.accept(this, param);
+
+        for (Statement stmt : s.getDefaultBody())
+            stmt.accept(this, param);
+
+        return null;
+    }
+
+    @Override
+    public RT visit(SwitchCase sc, PT param) {
+        sc.getValue().accept(this, param);
+
+        for (Statement stmt : sc.getBody())
+            stmt.accept(this, param);
+
+        return null;
+    }
+
 }

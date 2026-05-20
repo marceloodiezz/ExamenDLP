@@ -48,6 +48,24 @@ public class IdentificationVisitor extends AbstractVisitor<Void, Void> {
         return null;
     }
 
+    @Override
+    public Void visit(Switch switchStmt, Void param) {
+        switchStmt.getCondition().accept(this, param);
+
+        for (SwitchCase switchCase : switchStmt.getCases()) {
+            st.set();
+            switchCase.accept(this, param);
+            st.reset();
+        }
+
+        st.set();
+        for (Statement stmt : switchStmt.getDefaultBody())
+            stmt.accept(this, param);
+        st.reset();
+
+        return null;
+    }
+
     // ---------------------------------------------------
     // Sentencias
 

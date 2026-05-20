@@ -49,4 +49,7 @@ public interface Visitor<RT, PT> {
     RT visit(RecordType recordType, PT param);
     RT visit(VoidType voidType, PT param);
 
+    RT visit(SwitchCase sc, PT param);
+    RT visit(Switch s, PT param);
+
 }

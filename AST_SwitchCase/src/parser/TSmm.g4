@@ -198,7 +198,31 @@ statement returns [List<Statement> ast = new ArrayList<>()] locals [List<Express
              { $ast.add(new Return($e1.ast,
                                    $e1.ast.getLine(),
                                    $e1.ast.getColumn())); }
+
+         // Switch
+         | sw=switchStmt { $ast.add($sw.ast); }
          ;
+
+switchStmt returns [Switch ast] locals [List<SwitchCase> cases = new ArrayList<>(),
+                                        List<Statement> defaultBody = new ArrayList<>()] :
+          'switch' '(' e1=expression ')' '{'
+              (c=switchCase { $cases.add($c.ast); })*
+              ('default' ':' (s=statement { $defaultBody.addAll($s.ast); })*)?
+          '}'
+              { $ast = new Switch($e1.ast,
+                                  $cases,
+                                  $defaultBody,
+                                  $e1.ast.getLine(),
+                                  $e1.ast.getColumn()); }
+          ;
+
+switchCase returns [SwitchCase ast] locals [List<Statement> body = new ArrayList<>()] :
+           'case' e1=expression ':' (s=statement { $body.addAll($s.ast); })*
+               { $ast = new SwitchCase($e1.ast,
+                                      $body,
+                                      $e1.ast.getLine(),
+                                      $e1.ast.getColumn()); }
+          ;
 
 block returns [List<Statement> ast = new ArrayList<>()] :
      s1=statement { $ast.addAll($s1.ast); }
